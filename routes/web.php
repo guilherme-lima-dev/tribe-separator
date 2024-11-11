@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Controllers\CampistaController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [\App\Http\Controllers\CampistaController::class, 'index']);
-Route::post('/adicionar-a-tribo/{campista}/{tribo}', [\App\Http\Controllers\CampistaController::class, 'adicionarATribo']);
-Route::post('/remover-da-tribo/{campista}', [\App\Http\Controllers\CampistaController::class, 'removerDaTribo']);
-Route::get('/monta-tribos', [\App\Http\Controllers\CampistaController::class, 'montaTribos']);
+Route::get('/', [CampistaController::class, 'index']);
+Route::post('/adicionar-a-tribo/{campista}/{tribo}', [CampistaController::class, 'adicionarATribo']);
+Route::post('/remover-da-tribo/{campista}', [CampistaController::class, 'removerDaTribo']);
+Route::get('/monta-tribos', [CampistaController::class, 'montaTribos']);
+Route::get('/conhecidos/{campista}', [CampistaController::class, 'getConhecidos']);
+Route::post('/conhecidos/adicionar', [CampistaController::class, 'adicionarConhecido']);
+Route::post('/conhecidos/remover', [CampistaController::class, 'removerConhecido']);
