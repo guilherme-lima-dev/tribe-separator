@@ -11,7 +11,7 @@
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/creativetimofficial/tailwind-starter-kit/compiled-tailwind.min.css"/>
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet"/>
 
     <style>
         .bg-pink-500 {
@@ -26,10 +26,10 @@
             background-color: #FFCDD2; /* Fundo vermelho claro */
         }
 
-         #modalConhecidos{
-             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important; /* Sombra suave */
-             background: rgba(0,0,0,0.8);
-         }
+        #modalConhecidos, #modalConfidentes {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important; /* Sombra suave */
+            background: rgba(0, 0, 0, 0.8);
+        }
 
     </style>
     <title>Maanaim | Separação de tribos</title>
@@ -76,12 +76,14 @@
                 <div class="flex flex-wrap">
                     @foreach($tribos as $tribo)
                         <div class="w-full xl:w-4/12 mb-12 xl:mb-0 px-4">
-                            <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded">
+                            <div
+                                class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded">
                                 <div class="rounded-t mb-0 px-4 py-3 border-0">
                                     <div class="flex flex-wrap items-center">
                                         <div class="relative w-full px-4 max-w-full flex-grow flex-1">
                                             <h3 class="font-semibold text-base text-blueGray-700">
-                                                Tribo {{ $tribo->nome_tribo }} - {{ $tribo->confidentes->pluck('nome')->join(', ', ' e ') }}
+                                                Tribo {{ $tribo->nome_tribo }}
+                                                - {{ $tribo->confidentes->pluck('nome')->join(', ', ' e ') }}
                                             </h3>
                                             <p class="text-sm {{ $tribo->estaValida() ? 'text-green-500' : 'text-red-500' }}">
                                                 {{ $tribo->estaValida() ? 'Tribo está válida' : 'Tribo não está válida' }}
@@ -111,7 +113,8 @@
                                                     {{ $key + 1 }} - {{ $campista->nome }}
                                                     <form action="/remover-da-tribo/{{ $campista->id }}" method="POST">
                                                         @csrf
-                                                        <button class="text-red-500 font-bold text-xs rounded" type="submit">
+                                                        <button class="text-red-500 font-bold text-xs rounded"
+                                                                type="submit">
                                                             Remover da Tribo
                                                         </button>
                                                     </form>
@@ -137,7 +140,8 @@
         <div class="flex flex-wrap mt-2">
             <div class="w-full mb-4 px-4">
                 <!-- Campo de busca -->
-                <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Buscar campistas por nome, gênero, peso, altura..."
+                <input type="text" id="searchInput" onkeyup="filterTable()"
+                       placeholder="Buscar campistas por nome, gênero, peso, altura..."
                        class="px-3 py-2 border rounded w-full mb-4"/>
             </div>
             <div class="w-full mb-12 xl:mb-0 px-4">
@@ -242,7 +246,14 @@
                                         >
                                             Ver conhecidos
                                         </button>
-
+                                        <button
+                                            onclick="abrirModalConfidentes({{ $campista->id }}, '{{ $campista->nome }}')"
+                                            class="bg-purple-500 ml-3 active:bg-purple-600 text-white font-bold text-xs px-4 py-2 rounded"
+                                            type="button"
+                                            style="height: 36px; line-height: normal;"
+                                        >
+                                            Ver confidentes conhecidos
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -254,20 +265,22 @@
         </div>
 
 
-
         <!-- Modal com Estilos e Comportamento Atualizado -->
-        <div id="modalConhecidos" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black bg-opacity-30">
+        <div id="modalConhecidos"
+             class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black bg-opacity-30">
             <div onclick="fecharModal()" class="absolute inset-0"></div>
             <div class="bg-white w-50 max-w-lg p-6 rounded-lg shadow-lg relative z-10 mx-4"
                  style="box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);">
 
                 <!-- Botão de Fechar -->
-                <button onclick="fecharModal()" style="top: 0.5%; right: 2%;" class="absolute text-gray-500 hover:text-gray-800 text-2xl font-bold">
+                <button onclick="fecharModal()" style="top: 0.5%; right: 2%;"
+                        class="absolute text-gray-500 hover:text-gray-800 text-2xl font-bold">
                     &times;
                 </button>
 
                 <!-- Cabeçalho da Modal -->
-                <h2 class="text-2xl font-semibold text-center text-gray-800 mb-4">Conhecidos de <span id="campistaNome"></span></h2>
+                <h2 class="text-2xl font-semibold text-center text-gray-800 mb-4">Conhecidos de <span
+                        id="campistaNome"></span></h2>
 
                 <!-- Conteúdo da Modal -->
                 <div class="overflow-y-auto max-h-60">
@@ -278,21 +291,61 @@
 
                 <!-- Opção para Adicionar Conhecido -->
                 <div class="mt-4">
-                    <label for="novoConhecidoId" class="block text-gray-700 font-semibold mb-2">Adicionar Conhecido:</label>
+                    <label for="novoConhecidoId" class="block text-gray-700 font-semibold mb-2">Adicionar
+                        Conhecido:</label>
                     <select id="novoConhecidoId" class="w-full px-3 py-2 border rounded mb-2">
                         <option value="">Selecione um Campista...</option>
                         @foreach($campistas as $campista)
                             <option value="{{ $campista->id }}">{{ $campista->nome }}</option>
                         @endforeach
                     </select>
-                    <button onclick="adicionarConhecido()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full mt-2">
+                    <button onclick="adicionarConhecido()"
+                            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full mt-2">
                         Adicionar Conhecido
                     </button>
+
                 </div>
 
             </div>
         </div>
 
+
+        <!-- Modal para Ver Confidentes Conhecidos -->
+        <div id="modalConfidentes" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black bg-opacity-30">
+            <div onclick="fecharModalConfidentes()" class="absolute inset-0"></div>
+            <div class="bg-white w-50 max-w-lg p-6 rounded-lg shadow-lg relative z-10 mx-4"
+                 style="box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);">
+
+                <!-- Botão de Fechar -->
+                <button onclick="fecharModalConfidentes()" style="top: 0.5%; right: 2%;" class="absolute text-gray-500 hover:text-gray-800 text-2xl font-bold">
+                    &times;
+                </button>
+
+                <!-- Cabeçalho da Modal -->
+                <h2 class="text-2xl font-semibold text-center text-gray-800 mb-4">Confidentes Conhecidos de <span id="campistaNomeConfidentes"></span></h2>
+
+                <!-- Lista de Confidentes Conhecidos -->
+                <div class="overflow-y-auto max-h-60">
+                    <ul id="listaConfidentes" class="list-disc list-inside text-gray-700 space-y-1">
+                        <!-- Itens de confidentes conhecidos serão inseridos aqui -->
+                    </ul>
+                </div>
+
+                <!-- Opção para Adicionar Confidente Conhecido -->
+                <div class="mt-4">
+                    <label for="novoConfidenteId" class="block text-gray-700 font-semibold mb-2">Adicionar Confidente:</label>
+                    <select id="novoConfidenteId" class="w-full px-3 py-2 border rounded mb-2">
+                        <option value="">Selecione um Confidente...</option>
+                        @foreach($campistas as $campista)
+                            <option value="{{ $campista->id }}">{{ $campista->nome }}</option>
+                        @endforeach
+                    </select>
+                    <button onclick="adicionarConfidente()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full">
+                        Adicionar Confidente
+                    </button>
+                </div>
+            </div>
+        </div>
 
 
 
@@ -301,7 +354,8 @@
                 <hr class="mb-4 border-b-1 border-blueGray-200"/>
                 <div class="flex items-center md:justify-center justify-center">
                     <div class="text-sm text-blueGray-500 font-semibold py-1">
-                        Copyright © <span id="javascript-date"></span>
+                        Copyright ©
+                        <span id="javascript-date"></span>
                         <a href="https://www.creative-tim.com"
                            class="text-blueGray-500 hover:text-blueGray-700 text-sm font-semibold py-1">
                             MAANAIM
@@ -314,7 +368,7 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         // Inicializar o Select2
         $('#novoConhecidoId').select2({
             placeholder: "Selecione um Campista...",
@@ -363,7 +417,7 @@
 
 
     async function handleCampistaAction(url, action) {
-        const response = await fetch(url, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+        const response = await fetch(url, {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}});
         if (response.ok) {
             document.location.reload(); // Refresh the list after AJAX update
         } else {
@@ -419,7 +473,7 @@
                 "Content-Type": "application/json",
                 "X-CSRF-TOKEN": "{{ csrf_token() }}"
             },
-            body: JSON.stringify({ campistaId, novoConhecidoId })
+            body: JSON.stringify({campistaId, novoConhecidoId})
         })
             .then(response => response.json())
             .then(data => {
@@ -441,7 +495,7 @@
                 "Content-Type": "application/json",
                 "X-CSRF-TOKEN": "{{ csrf_token() }}"
             },
-            body: JSON.stringify({ campistaId, conhecidoId })
+            body: JSON.stringify({campistaId, conhecidoId})
         })
             .then(response => response.json())
             .then(data => {
@@ -454,9 +508,109 @@
             .catch(error => console.error("Erro ao remover conhecido:", error));
     }
 
+    function abrirModalConfidentes(campistaId, campistaNome) {
+        // Defina o ID e o nome do campista para adicionar/remover confidentes
+        document.getElementById("campistaNomeConfidentes").innerText = campistaNome;
+        document.getElementById("modalConfidentes").dataset.campistaId = campistaId;
+
+        // Limpe qualquer conteúdo existente na lista de confidentes conhecidos
+        const listaConfidentes = document.getElementById("listaConfidentes");
+        listaConfidentes.innerHTML = "";
+
+        // Fetch para obter os confidentes conhecidos do campista
+        fetch(`/confidentes/${campistaId}`)
+            .then(response => response.json())
+            .then(data => {
+                data.confidentes.forEach(confidente => {
+                    const li = document.createElement("li");
+                    li.classList.add("flex", "justify-between", "items-center");
+                    li.innerText = confidente.nome;
+
+                    // Botão de Remover ao lado do nome do confidente
+                    const removeButton = document.createElement("button");
+                    removeButton.innerText = "Remover";
+                    removeButton.className = "bg-red-500 hover:bg-red-700 text-white font-bold text-xs px-2 py-1 rounded ml-4";
+                    removeButton.onclick = () => removerConfidente(campistaId, confidente.id, li);
+
+                    li.appendChild(removeButton);
+                    listaConfidentes.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar confidentes conhecidos:', error));
+
+        // Obtenha a lista de confidentes para o seletor de "Adicionar Confidente"
+        fetch(`/confidentes`)
+            .then(response => response.json())
+            .then(confidentes => {
+                const selectConfidentes = document.getElementById("novoConfidenteId");
+                selectConfidentes.innerHTML = '<option value="">Selecione um Confidente...</option>';
+
+                confidentes.forEach(confidente => {
+                    const option = document.createElement("option");
+                    option.value = confidente.id;
+                    option.innerText = confidente.nome;
+                    selectConfidentes.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Erro ao carregar lista de confidentes:', error));
+
+        // Exibe a modal
+        document.getElementById("modalConfidentes").classList.remove("hidden");
+    }
+
+    function fecharModalConfidentes() {
+        document.getElementById("modalConfidentes").classList.add("hidden");
+    }
+
+    function adicionarConfidente() {
+        const campistaId = document.getElementById("modalConfidentes").dataset.campistaId;
+        const novoConfidenteId = document.getElementById("novoConfidenteId").value;
+
+        fetch(`/confidentes/adicionar`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ campistaId, novoConfidenteId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    abrirModalConfidentes(campistaId, document.getElementById("campistaNomeConfidentes").innerText); // Recarregar a lista
+                    document.getElementById("novoConfidenteId").value = ""; // Limpar o campo de seleção após adicionar
+                } else {
+                    alert(data.message || "Erro ao adicionar confidente.");
+                }
+            })
+            .catch(error => console.error("Erro ao adicionar confidente:", error));
+    }
+
+    function removerConfidente(campistaId, confidenteId, liElement) {
+        fetch(`/confidentes/remover`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ campistaId, confidenteId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    liElement.remove(); // Remove o elemento da lista
+                } else {
+                    alert(data.message || "Erro ao remover confidente.");
+                }
+            })
+            .catch(error => console.error("Erro ao remover confidente:", error));
+    }
+
 
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" charset="utf-8"></script>
 <script src="https://unpkg.com/@popperjs/core@2.9.1/dist/umd/popper.min.js" charset="utf-8"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>

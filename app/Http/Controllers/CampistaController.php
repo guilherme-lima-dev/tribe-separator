@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Campista;
+use App\Models\Confidente;
 use App\Models\Tribo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -97,5 +98,49 @@ class CampistaController extends Controller
 
         return response()->json(['success' => false, 'message' => 'Campista ou conhecido não encontrado.']);
     }
+
+    public function getConfidentesConhecidos(Campista $campista)
+    {
+        return response()->json([
+            'confidentes' => $campista->confidentesConhecidos()->select(['nome', 'id'])->get()
+        ]);
+    }
+
+    public function adicionarConfidenteConhecido(Request $request)
+    {
+        $campista = Campista::find($request->campistaId);
+        $confidente = Campista::find($request->novoConfidenteId);
+
+        if ($campista && $confidente) {
+            $campista->confidentesConhecidos()->attach($confidente->id);
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Campista ou confidente não encontrado.']);
+    }
+
+    public function removerConfidenteConhecido(Request $request)
+    {
+        $campista = Campista::find($request->campistaId);
+        $confidente = Campista::find($request->confidenteId);
+
+        if ($campista && $confidente) {
+            $campista->confidentesConhecidos()->detach($confidente->id);
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Campista ou confidente não encontrado.']);
+    }
+
+    // CampistaController.php (ou ConfidenteController.php se houver um controlador separado)
+
+    public function getConfidentes()
+    {
+        // Obtenha todos os confidentes, por exemplo, apenas com os campos id e nome
+        $confidentes = Confidente::select('id', 'nome')->get();
+
+        return response()->json($confidentes);
+    }
+
 
 }
