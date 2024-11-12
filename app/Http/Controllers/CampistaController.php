@@ -142,5 +142,33 @@ class CampistaController extends Controller
         return response()->json($confidentes);
     }
 
+    // CampistaController.php
+
+    public function adicionarCampista(Request $request)
+    {
+        $validated = $request->validate([
+            'nome' => 'required|string|max:255',
+            'genero' => 'required|in:m,f',
+            'peso' => 'required|numeric',
+            'altura' => 'required|numeric'
+        ]);
+
+        $campista = Campista::create($validated);
+
+        return response()->json(['success' => true, 'campista' => $campista]);
+    }
+
+    public function removerCampista($id)
+    {
+        $campista = Campista::find($id);
+
+        if ($campista) {
+            $campista->delete();
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Campista não encontrado']);
+    }
+
 
 }

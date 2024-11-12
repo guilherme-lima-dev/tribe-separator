@@ -14,3 +14,5 @@ Route::get('/confidentes/{campista}', [CampistaController::class, 'getConfidente
 Route::post('/confidentes/adicionar', [CampistaController::class, 'adicionarConfidenteConhecido']);
 Route::post('/confidentes/remover', [CampistaController::class, 'removerConfidenteConhecido']);
 Route::get('/confidentes', [CampistaController::class, 'getConfidentes']);
+Route::post('/campistas/adicionar', [CampistaController::class, 'adicionarCampista']);
+Route::delete('/campistas/remover/{id}', [CampistaController::class, 'removerCampista']);

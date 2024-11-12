@@ -138,11 +138,54 @@
             </div>
         </div>
         <div class="flex flex-wrap mt-2">
+            <div class="w-full">
+                <!-- Botão para abrir a modal de adicionar campista -->
+                <button onclick="abrirModalAdicionarCampista()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 ml-4 mb-4 px-4 rounded">
+                    Adicionar Campista
+                </button>
+
+                <!-- Modal para adicionar novo campista -->
+                <div id="modalAdicionarCampista" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black bg-opacity-30">
+                    <div onclick="fecharModalAdicionarCampista()" class="absolute inset-0"></div>
+                    <div class="bg-white w-50 max-w-lg p-6 rounded-lg shadow-lg relative z-10 mx-4">
+
+                        <!-- Botão de Fechar -->
+                        <button onclick="fecharModalAdicionarCampista()" style="top: 0.5%; right: 2%;" class="absolute text-gray-500 hover:text-gray-800 text-2xl font-bold">
+                            &times;
+                        </button>
+
+                        <!-- Formulário de Adicionar Campista -->
+                        <h2 class="text-2xl font-semibold text-center text-gray-800 mb-4">Adicionar Campista</h2>
+                        <form id="formAdicionarCampista" onsubmit="adicionarCampista(event)">
+                            <label class="block mb-2 text-gray-700 font-semibold">Nome</label>
+                            <input type="text" id="nomeCampista" required class="w-full px-3 py-2 border rounded mb-2">
+
+                            <label class="block mb-2 text-gray-700 font-semibold">Gênero</label>
+                            <select id="generoCampista" required class="w-full px-3 py-2 border rounded mb-2">
+                                <option value="m">Masculino</option>
+                                <option value="f">Feminino</option>
+                            </select>
+
+                            <label class="block mb-2 text-gray-700 font-semibold">Peso (kg)</label>
+                            <input type="number" id="pesoCampista" required class="w-full px-3 py-2 border rounded mb-2">
+
+                            <label class="block mb-2 text-gray-700 font-semibold">Altura (cm)</label>
+                            <input type="number" id="alturaCampista" required class="w-full px-3 py-2 border rounded mb-2">
+
+                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+                                Adicionar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
             <div class="w-full mb-4 px-4">
                 <!-- Campo de busca -->
                 <input type="text" id="searchInput" onkeyup="filterTable()"
                        placeholder="Buscar campistas por nome, gênero, peso, altura..."
                        class="px-3 py-2 border rounded w-full mb-4"/>
+
             </div>
             <div class="w-full mb-12 xl:mb-0 px-4">
                 <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded">
@@ -194,7 +237,7 @@
                                             <form action="/remover-da-tribo/{{ $campista->id }}" method="POST">
                                                 @csrf
                                                 <button
-                                                    class="bg-red-500 active:bg-red-600 text-white font-bold text-xs px-4 py-2 rounded"
+                                                    class="bg-pink-600 active:bg-pink-600 text-white font-bold text-xs px-4 py-2 rounded"
                                                     type="submit"
                                                     style="height: 36px; line-height: normal;"
                                                 >
@@ -253,6 +296,11 @@
                                             style="height: 36px; line-height: normal;"
                                         >
                                             Ver confidentes conhecidos
+                                        </button>
+                                        <button
+                                            style="height: 36px; line-height: normal;"
+                                            onclick="removerCampista({{ $campista->id }})" class="bg-red-500 active:bg-red-600 text-white font-bold text-xs px-4 py-2 rounded ml-3" >
+                                            Excluir Campista
                                         </button>
                                     </td>
                                 </tr>
@@ -606,6 +654,68 @@
             .catch(error => console.error("Erro ao remover confidente:", error));
     }
 
+
+    // Função para abrir a modal de adicionar campista
+    function abrirModalAdicionarCampista() {
+        document.getElementById("modalAdicionarCampista").classList.remove("hidden");
+    }
+
+    // Função para fechar a modal de adicionar campista
+    function fecharModalAdicionarCampista() {
+        document.getElementById("modalAdicionarCampista").classList.add("hidden");
+    }
+
+    // Função para adicionar um novo campista
+    function adicionarCampista(event) {
+        event.preventDefault();
+
+        const nome = document.getElementById("nomeCampista").value;
+        const genero = document.getElementById("generoCampista").value;
+        const peso = document.getElementById("pesoCampista").value;
+        const altura = document.getElementById("alturaCampista").value;
+
+        fetch(`/campistas/adicionar`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ nome, genero, peso, altura })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Campista adicionado com sucesso!");
+                    fecharModalAdicionarCampista();
+                    document.location.reload(); // Atualiza a lista de campistas
+                } else {
+                    alert(data.message || "Erro ao adicionar campista.");
+                }
+            })
+            .catch(error => console.error("Erro ao adicionar campista:", error));
+    }
+
+    // Função para remover um campista
+    function removerCampista(campistaId) {
+        if (!confirm("Tem certeza que deseja excluir este campista?")) return;
+
+        fetch(`/campistas/remover/${campistaId}`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Campista removido com sucesso!");
+                    document.location.reload(); // Atualiza a lista de campistas
+                } else {
+                    alert(data.message || "Erro ao remover campista.");
+                }
+            })
+            .catch(error => console.error("Erro ao remover campista:", error));
+    }
 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
