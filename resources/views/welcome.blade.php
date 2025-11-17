@@ -237,9 +237,12 @@
                         $detalhes = session('importacao_detalhes');
                     @endphp
                     <div class="mt-3 text-sm">
-                        <div class="grid grid-cols-3 gap-4 mb-2">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
                             <div>
                                 <span class="font-medium">Total processado:</span> {{ $detalhes['total'] }}
+                                @if(isset($detalhes['total_esperado']) && $detalhes['total_esperado'] != $detalhes['total'])
+                                    <span class="text-yellow-600 text-xs">(esperado: {{ $detalhes['total_esperado'] }})</span>
+                                @endif
                             </div>
                             <div class="text-green-700">
                                 <span class="font-medium">Sucessos:</span> {{ $detalhes['sucessos'] }}
@@ -247,15 +250,28 @@
                             <div class="text-red-700">
                                 <span class="font-medium">Erros:</span> {{ $detalhes['erros'] }}
                             </div>
+                            @if(isset($detalhes['linhas_vazias']) && $detalhes['linhas_vazias'] > 0)
+                                <div class="text-gray-600">
+                                    <span class="font-medium">Linhas vazias:</span> {{ $detalhes['linhas_vazias'] }}
+                                </div>
+                            @endif
                         </div>
                         @if (!empty($detalhes['erros_detalhados']))
-                            <details class="mt-2">
-                                <summary class="cursor-pointer text-red-600 font-medium">Ver detalhes dos erros</summary>
-                                <ul class="mt-2 space-y-1 text-xs">
-                                    @foreach ($detalhes['erros_detalhados'] as $erro)
-                                        <li class="text-red-600">• {{ $erro }}</li>
-                                    @endforeach
-                                </ul>
+                            <details class="mt-2" open>
+                                <summary class="cursor-pointer text-red-600 font-medium hover:text-red-800">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    Ver detalhes dos erros ({{ count($detalhes['erros_detalhados']) }})
+                                </summary>
+                                <div class="mt-2 max-h-96 overflow-y-auto border border-red-200 rounded-lg p-3 bg-red-50">
+                                    <ul class="space-y-1.5 text-xs">
+                                        @foreach ($detalhes['erros_detalhados'] as $erro)
+                                            <li class="text-red-700 flex items-start">
+                                                <span class="text-red-500 mr-2">•</span>
+                                                <span class="flex-1">{{ $erro }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
                             </details>
                         @endif
                     </div>
@@ -264,9 +280,29 @@
                 @endif
 
                 @if (session('warning'))
-            <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-4 flex items-center">
-                <i class="fas fa-exclamation-triangle mr-2"></i>
-                <span>{{ session('warning') }}</span>
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <span class="font-semibold">{{ session('warning') }}</span>
+                </div>
+                @if (session('campistas_nao_alocados'))
+                    @php
+                        $naoAlocados = session('campistas_nao_alocados');
+                    @endphp
+                    <details class="mt-3">
+                        <summary class="cursor-pointer text-red-600 font-medium text-sm">Ver campistas não alocados ({{ count($naoAlocados) }})</summary>
+                        <ul class="mt-2 space-y-2 text-sm">
+                            @foreach ($naoAlocados as $campista)
+                                <li class="bg-red-50 border border-red-200 rounded p-2">
+                                    <div class="font-medium text-red-800">{{ $campista['nome'] }}</div>
+                                    <div class="text-xs text-red-600 mt-1 italic">
+                                        <i class="fas fa-info-circle mr-1"></i>{{ $campista['motivo'] }}
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @endif
                     </div>
                 @endif
 
@@ -343,7 +379,31 @@
             $pesoMedioGlobal = $campistas->avg('peso');
             $alturaMediaGlobal = $campistas->avg('altura');
             $percentualAlocado = $totalCampistas > 0 ? ($campistasComTribo / $totalCampistas) * 100 : 0;
-                                            @endphp
+            
+            // Contar campistas inválidos
+            $campistasInvalidos = $campistas->filter(function($c) {
+                return $c->tribo && !$c->campistaAtendeARegra();
+            });
+            $totalInvalidos = $campistasInvalidos->count();
+        @endphp
+        
+        @if($totalInvalidos > 0)
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-triangle mr-2 text-xl"></i>
+                        <div>
+                            <p class="font-semibold">Atenção: {{ $totalInvalidos }} campista(s) inválido(s) detectado(s)</p>
+                            <p class="text-sm mt-1">Alguns campistas estão em tribos onde conhecem outros campistas ou confidentes.</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('campistaTable').scrollIntoView({ behavior: 'smooth' }); document.getElementById('campistaCardsContainer')?.scrollIntoView({ behavior: 'smooth' });" 
+                            class="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors">
+                        <i class="fas fa-arrow-down mr-2"></i>Ver Campistas
+                    </button>
+                </div>
+            </div>
+        @endif
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <!-- Card 1: Total de Campistas -->
             <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 card-hover">
@@ -351,12 +411,12 @@
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Total de Campistas</p>
                         <p class="text-3xl font-bold text-gray-800">{{ $totalCampistas }}</p>
-                                            </div>
+                    </div>
                     <div class="bg-blue-100 rounded-full p-4">
                         <i class="fas fa-users text-2xl text-blue-600"></i>
-                                        </div>
-                                    </div>
-                                </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- Card 2: Campistas Alocados -->
             <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 card-hover">
@@ -365,12 +425,12 @@
                         <p class="text-sm text-gray-600 mb-1">Campistas Alocados</p>
                         <p class="text-3xl font-bold text-gray-800">{{ $campistasComTribo }}</p>
                         <p class="text-xs text-gray-500 mt-1">{{ number_format($percentualAlocado, 1) }}% do total</p>
-                                </div>
+                    </div>
                     <div class="bg-green-100 rounded-full p-4">
                         <i class="fas fa-check-circle text-2xl text-green-600"></i>
-                            </div>
-                        </div>
+                    </div>
                 </div>
+            </div>
 
             <!-- Card 3: Campistas Sem Tribo -->
             <div class="bg-white rounded-xl shadow-md p-6 border-l-4 {{ $campistasSemTribo > 0 ? 'border-yellow-500' : 'border-gray-300' }} card-hover">
@@ -381,14 +441,34 @@
                         @if($campistasSemTribo > 0)
                             <p class="text-xs text-yellow-600 mt-1 font-medium">Requer atenção</p>
                         @endif
-            </div>
+                    </div>
                     <div class="rounded-full p-4 {{ $campistasSemTribo > 0 ? 'bg-yellow-100' : 'bg-gray-100' }}">
                         <i class="fas fa-user-slash text-2xl {{ $campistasSemTribo > 0 ? 'text-yellow-600' : 'text-gray-600' }}"></i>
-        </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- Card 4: Médias Globais -->
+            <!-- Card 4: Campistas Inválidos -->
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 {{ $totalInvalidos > 0 ? 'border-red-500' : 'border-gray-300' }} card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Campistas Inválidos</p>
+                        <p class="text-3xl font-bold {{ $totalInvalidos > 0 ? 'text-red-600' : 'text-gray-800' }}">{{ $totalInvalidos }}</p>
+                        @if($totalInvalidos > 0)
+                            <p class="text-xs text-red-600 mt-1 font-medium">Requer correção</p>
+                        @else
+                            <p class="text-xs text-gray-500 mt-1">Todos válidos</p>
+                        @endif
+                    </div>
+                    <div class="rounded-full p-4 {{ $totalInvalidos > 0 ? 'bg-red-100' : 'bg-gray-100' }}">
+                        <i class="fas fa-exclamation-triangle text-2xl {{ $totalInvalidos > 0 ? 'text-red-600' : 'text-gray-600' }}"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card de Médias Globais (linha separada) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500 card-hover">
                 <div class="flex items-center justify-between">
                     <div>
@@ -480,21 +560,34 @@
                                     <i class="fas fa-users mr-1.5" style="color: #2E8B57;"></i>
                                     <span class="font-semibold">{{ $totalCampistas }}</span>
                                     <span class="text-gray-500">/13</span>
-                            </div>
+                                </div>
                                 <div class="stat-badge">
                                     <i class="fas fa-mars mr-1.5" style="color: #3b82f6;"></i>
                                     <span class="font-semibold">{{ $numHomens }}</span>
                                     <span class="text-gray-500">H</span>
-                        </div>
+                                </div>
                                 <div class="stat-badge">
                                     <i class="fas fa-venus mr-1.5" style="color: #ec4899;"></i>
                                     <span class="font-semibold">{{ $numMulheres }}</span>
                                     <span class="text-gray-500">M</span>
-                </div>
-                                <div class="stat-badge relative group cursor-help">
-                                    <i class="fas fa-weight mr-1.5" style="color: #f97316;"></i>
-                                    <span class="font-semibold">{{ number_format($pesoMedio, 1) }}</span>
-                                    <span class="text-gray-500">kg</span>
+                                </div>
+                                <div class="stat-badge relative group cursor-help {{ $balanceamentoPeso === 'ruim' ? 'border-2 border-red-300' : ($balanceamentoPeso === 'bom' ? 'border border-yellow-300' : '') }}">
+                                    <div class="flex items-center justify-between w-full">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-weight mr-1.5" style="color: #f97316;"></i>
+                                            <span class="font-semibold">{{ number_format($pesoMedio, 1) }}</span>
+                                            <span class="text-gray-500">kg</span>
+                                        </div>
+                                        @if($totalCampistas > 0 && $pesoMedioGlobal > 0)
+                                            @if($balanceamentoPeso === 'ótimo')
+                                                <span class="ml-2 text-xs text-green-600"><i class="fas fa-check-circle"></i></span>
+                                            @elseif($balanceamentoPeso === 'bom')
+                                                <span class="ml-2 text-xs text-yellow-600"><i class="fas fa-exclamation-circle"></i></span>
+                                            @else
+                                                <span class="ml-2 text-xs text-red-600"><i class="fas fa-times-circle"></i></span>
+                                            @endif
+                                        @endif
+                                    </div>
                                     @if($totalCampistas > 0 && $pesoMedioGlobal > 0)
                                         <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none shadow-xl">
                                             Média global: {{ number_format($pesoMedioGlobal, 1) }}kg<br>
@@ -508,11 +601,24 @@
                                             @endif
                                         </span>
                                     @endif
-            </div>
-                                <div class="stat-badge relative group cursor-help">
-                                    <i class="fas fa-ruler-vertical mr-1.5" style="color: #a855f7;"></i>
-                                    <span class="font-semibold">{{ number_format($alturaMedia, 1) }}</span>
-                                    <span class="text-gray-500">cm</span>
+                                </div>
+                                <div class="stat-badge relative group cursor-help {{ $balanceamentoAltura === 'ruim' ? 'border-2 border-red-300' : ($balanceamentoAltura === 'bom' ? 'border border-yellow-300' : '') }}">
+                                    <div class="flex items-center justify-between w-full">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-ruler-vertical mr-1.5" style="color: #a855f7;"></i>
+                                            <span class="font-semibold">{{ number_format($alturaMedia, 1) }}</span>
+                                            <span class="text-gray-500">cm</span>
+                                        </div>
+                                        @if($totalCampistas > 0 && $alturaMediaGlobal > 0)
+                                            @if($balanceamentoAltura === 'ótimo')
+                                                <span class="ml-2 text-xs text-green-600"><i class="fas fa-check-circle"></i></span>
+                                            @elseif($balanceamentoAltura === 'bom')
+                                                <span class="ml-2 text-xs text-yellow-600"><i class="fas fa-exclamation-circle"></i></span>
+                                            @else
+                                                <span class="ml-2 text-xs text-red-600"><i class="fas fa-times-circle"></i></span>
+                                            @endif
+                                        @endif
+                                    </div>
                                     @if($totalCampistas > 0 && $alturaMediaGlobal > 0)
                                         <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none shadow-xl">
                                             Média global: {{ number_format($alturaMediaGlobal, 1) }}cm<br>
@@ -526,7 +632,7 @@
                                             @endif
                                         </span>
                                     @endif
-        </div>
+                                </div>
                             </div>
                             
                             @if($totalCampistas > 0 && ($pesoMedioGlobal > 0 || $alturaMediaGlobal > 0))
@@ -581,32 +687,52 @@
                                 </div>
                                 <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
                                     @forelse($tribo->campistas as $key => $campista)
-                                        <div class="campista-item {{ $campista->campistaAtendeARegra() ? 'bg-gray-50 border-gray-200 hover:bg-gray-100' : 'bg-red-50 border-red-200 hover:bg-red-100' }}">
-                                            <span class="text-sm font-medium text-gray-800 flex items-center">
-                                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-opacity-10 text-xs font-bold mr-2" style="background-color: rgba(46, 139, 87, 0.1); color: #2E8B57;">
-                                                    {{ $key + 1 }}
+                                        @php
+                                            $estaValido = $campista->campistaAtendeARegra();
+                                            $motivoInvalidade = $campista->retornaMotivoInvalidade();
+                                        @endphp
+                                        <div class="campista-item {{ $estaValido ? 'bg-gray-50 border-gray-200 hover:bg-gray-100' : 'bg-red-50 border-red-300 border-l-4 hover:bg-red-100' }}">
+                                            <div class="flex items-start justify-between">
+                                                <span class="text-sm font-medium text-gray-800 flex items-center flex-1">
+                                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-opacity-10 text-xs font-bold mr-2 {{ $estaValido ? '' : 'bg-red-200' }}" style="{{ $estaValido ? 'background-color: rgba(46, 139, 87, 0.1); color: #2E8B57;' : 'color: #dc2626;' }}">
+                                                        {{ $key + 1 }}
+                                                    </span>
+                                                    <div class="flex-1">
+                                                        <div class="flex items-center gap-2">
+                                                            <span>{{ $campista->nome }}</span>
+                                                            @if(!$estaValido)
+                                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-200 text-red-800 border border-red-300" title="{{ $motivoInvalidade }}">
+                                                                    <i class="fas fa-exclamation-triangle text-xs mr-1"></i>
+                                                                </span>
+                                                            @endif
+                                                        </div>
+                                                        @if(!$estaValido && $motivoInvalidade)
+                                                            <p class="text-xs text-red-600 mt-0.5 italic">
+                                                                {{ $motivoInvalidade }}
+                                                            </p>
+                                                        @endif
+                                                    </div>
                                                 </span>
-                                                {{ $campista->nome }}
-                                            </span>
                                             <form action="/remover-da-tribo/{{ $campista->id }}" method="POST" class="inline" onsubmit="return confirmarRemoverDaTribo(event, '{{ $campista->nome }}')">
                                                 @csrf
                                                 <button type="submit" 
                                                         class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg p-1.5 transition-all"
                                                         title="Remover da tribo">
                                                     <i class="fas fa-times text-xs"></i>
-                            </button>
-                        </form>
-                    </div>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
                                     @empty
                                         <div class="text-center py-6">
                                             <i class="fas fa-user-slash text-3xl text-gray-300 mb-2"></i>
                                             <p class="text-sm text-gray-400 italic">Nenhum campista alocado</p>
-                </div>
+                                        </div>
                                     @endforelse
-            </div>
-            </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
                 @empty
                     <div class="col-span-full text-center py-12">
                         <i class="fas fa-layer-group text-6xl text-gray-300 mb-4"></i>
@@ -616,8 +742,8 @@
                         </button>
                     </div>
                 @endforelse
-                    </div>
-                    </div>
+            </div>
+        </div>
 
         <!-- Lista de Campistas -->
         <div class="bg-white rounded-xl shadow-md p-6">
@@ -658,9 +784,27 @@
                             </thead>
                     <tbody id="campistaTableBody" class="divide-y divide-gray-200">
                             @foreach($campistas as $campista)
-                            <tr id="row-{{ $campista->id }}" class="campista-row {{ $campista->campistaAtendeARegra() ? '' : 'bg-red-50' }} hover:bg-gray-50 transition-colors" data-campista-id="{{ $campista->id }}">
+                            @php
+                                $estaValido = $campista->campistaAtendeARegra();
+                                $motivoInvalidade = $campista->retornaMotivoInvalidade();
+                            @endphp
+                            <tr id="row-{{ $campista->id }}" class="campista-row {{ $estaValido ? '' : 'bg-red-50 border-l-4 border-red-500' }} hover:bg-gray-50 transition-colors" data-campista-id="{{ $campista->id }}">
                                 <td class="px-4 py-3 text-sm text-gray-700">{{ $campista->id }}</td>
-                                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $campista->nome }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-gray-900">
+                                    <div class="flex items-center gap-2">
+                                        <span>{{ $campista->nome }}</span>
+                                        @if(!$estaValido && $campista->tribo)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-300" title="{{ $motivoInvalidade }}">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>Inválido
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @if(!$estaValido && $motivoInvalidade)
+                                        <p class="text-xs text-red-600 mt-1 italic">
+                                            <i class="fas fa-info-circle mr-1"></i>{{ $motivoInvalidade }}
+                                        </p>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3 text-sm text-gray-700">
                                     @if($campista->genero == 'm')
                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
@@ -761,11 +905,27 @@
             <!-- Versão Mobile (cards) -->
             <div id="campistaCardsContainer" class="md:hidden space-y-3">
                 @foreach($campistas as $campista)
-                    <div id="card-{{ $campista->id }}" class="campista-card bg-white rounded-lg shadow p-4 {{ $campista->campistaAtendeARegra() ? '' : 'border-l-4 border-red-500' }}" data-campista-id="{{ $campista->id }}">
+                    @php
+                        $estaValido = $campista->campistaAtendeARegra();
+                        $motivoInvalidade = $campista->retornaMotivoInvalidade();
+                    @endphp
+                    <div id="card-{{ $campista->id }}" class="campista-card bg-white rounded-lg shadow p-4 {{ $estaValido ? '' : 'border-l-4 border-red-500 bg-red-50' }}" data-campista-id="{{ $campista->id }}">
                         <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <h3 class="font-bold text-gray-900">{{ $campista->nome }}</h3>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="font-bold text-gray-900">{{ $campista->nome }}</h3>
+                                    @if(!$estaValido && $campista->tribo)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-300">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>Inválido
+                                        </span>
+                                    @endif
+                                </div>
                                 <p class="text-sm text-gray-600">ID: {{ $campista->id }}</p>
+                                @if(!$estaValido && $motivoInvalidade)
+                                    <p class="text-xs text-red-600 mt-1 italic">
+                                        <i class="fas fa-info-circle mr-1"></i>{{ $motivoInvalidade }}
+                                    </p>
+                                @endif
                 </div>
                             @if($campista->genero == 'm')
                                 <span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">

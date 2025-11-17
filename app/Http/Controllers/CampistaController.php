@@ -12,8 +12,9 @@ class CampistaController extends Controller
 {
     public function index()
     {
-        $campistas = Campista::all();
-        $tribos = Tribo::all();
+        // Usar eager loading para otimização
+        $campistas = Campista::with(['conhecidos', 'confidentesConhecidos', 'tribo'])->get();
+        $tribos = Tribo::with(['campistas', 'confidentes'])->get();
         $confidentes = Confidente::all();
         return response()->view('welcome', compact('campistas', 'tribos', 'confidentes'));
     }
@@ -39,37 +40,179 @@ class CampistaController extends Controller
 
     public function montaTribos()
     {
-        $campistas = Campista::all();
-        $tribos = Tribo::all();
-        $this->distribuirCampistasNasTribos($campistas, $tribos);
+        // Usar eager loading para otimização
+        $campistas = Campista::with(['conhecidos', 'confidentesConhecidos'])->get();
+        $tribos = Tribo::with(['campistas', 'confidentes'])->get();
+        
+        $resultado = $this->distribuirCampistasNasTribos($campistas, $tribos);
 
         $todasValidas = $tribos->every(fn($tribo) => $tribo->estaValida());
-        return redirect()->back()->with($todasValidas ? 'success' : 'warning',
-            $todasValidas ? 'Todas as tribos foram montadas com sucesso.' : 'Algumas tribos podem precisar de intervenção manual.');
+        
+        // Recarregar tribos para ter dados atualizados
+        $tribos = Tribo::with(['campistas', 'confidentes'])->get();
+        
+        $mensagem = $todasValidas 
+            ? "Todas as tribos foram montadas com sucesso! {$resultado['alocados']} campista(s) alocado(s)." 
+            : "Distribuição concluída: {$resultado['alocados']} campista(s) alocado(s).";
+        
+        if ($resultado['naoAlocados'] > 0) {
+            $mensagem .= " {$resultado['naoAlocados']} campista(s) não puderam ser alocados.";
+        }
+        
+        $dadosRetorno = [
+            $todasValidas ? 'success' : 'warning' => $mensagem
+        ];
+        
+        if (!empty($resultado['campistasNaoAlocados'])) {
+            $dadosRetorno['campistas_nao_alocados'] = $resultado['campistasNaoAlocados'];
+        }
+        
+        return redirect()->back()->with($dadosRetorno);
+    }
+
+    /**
+     * Calcula médias globais de peso, altura e proporção de gênero
+     */
+    private function calcularMediasGlobais($campistas)
+    {
+        $totalCampistas = $campistas->count();
+        
+        if ($totalCampistas === 0) {
+            return [
+                'peso' => 0,
+                'altura' => 0,
+                'proporcaoGenero' => ['m' => 0, 'f' => 0]
+            ];
+        }
+        
+        $pesoMedio = $campistas->avg('peso');
+        $alturaMedia = $campistas->avg('altura');
+        
+        $numHomens = $campistas->where('genero', 'm')->count();
+        $numMulheres = $campistas->where('genero', 'f')->count();
+        
+        return [
+            'peso' => $pesoMedio ?? 0,
+            'altura' => $alturaMedia ?? 0,
+            'proporcaoGenero' => [
+                'm' => $numHomens,
+                'f' => $numMulheres,
+                'total' => $totalCampistas
+            ]
+        ];
+    }
+
+    /**
+     * Calcula score de balanceamento simulando a adição do campista à tribo
+     * Quanto menor o score, melhor o balanceamento
+     */
+    private function calcularScoreBalanceamento($campista, $tribo, $mediasGlobais)
+    {
+        $campistasAtuais = $tribo->campistas;
+        $totalAtual = $campistasAtuais->count();
+        
+        // Se tribo está vazia, usar valores do campista
+        if ($totalAtual === 0) {
+            $pesoMedioAtual = 0;
+            $alturaMediaAtual = 0;
+        } else {
+            $pesoMedioAtual = $campistasAtuais->avg('peso');
+            $alturaMediaAtual = $campistasAtuais->avg('altura');
+        }
+        
+        // SIMULAR nova média SE adicionar este campista
+        // Fórmula: nova_media = (media_atual * n + novo_valor) / (n + 1)
+        $novoPesoMedio = (($pesoMedioAtual * $totalAtual) + $campista->peso) / ($totalAtual + 1);
+        $novaAlturaMedia = (($alturaMediaAtual * $totalAtual) + $campista->altura) / ($totalAtual + 1);
+        
+        // Calcular desvio da média global (quanto menor, melhor)
+        $desvioPeso = abs($novoPesoMedio - $mediasGlobais['peso']);
+        $desvioAltura = abs($novaAlturaMedia - $mediasGlobais['altura']);
+        
+        // Calcular desvio percentual
+        $desvioPercentualPeso = $mediasGlobais['peso'] > 0 
+            ? ($desvioPeso / $mediasGlobais['peso']) * 100 
+            : 0;
+        $desvioPercentualAltura = $mediasGlobais['altura'] > 0 
+            ? ($desvioAltura / $mediasGlobais['altura']) * 100 
+            : 0;
+        
+        // Score: soma dos desvios percentuais (altura pesa menos)
+        // Peso tem peso 1, altura tem peso 0.5
+        return $desvioPercentualPeso + ($desvioPercentualAltura * 0.5);
     }
 
     private function distribuirCampistasNasTribos($campistas, $tribos)
     {
         // 1. LIMPAR todas as tribos antes de redistribuir
         Campista::query()->update(['tribo_id' => null]);
-
-        // 2. Distribuir cada campista
-        foreach ($campistas as $campista) {
+        
+        // 2. Calcular médias globais
+        $mediasGlobais = $this->calcularMediasGlobais($campistas);
+        
+        // 3. Ordenar campistas por restrições (mais restritivos primeiro)
+        // Campistas com mais conhecidos/confidentes devem ser alocados primeiro
+        $campistasOrdenados = $campistas->sortByDesc(function($c) {
+            return $c->conhecidos->count() + $c->confidentesConhecidos->count();
+        });
+        
+        $alocados = 0;
+        $naoAlocados = 0;
+        $campistasNaoAlocados = [];
+        
+        // 4. Distribuir cada campista
+        foreach ($campistasOrdenados as $campista) {
+            $melhorTribo = null;
+            $menorScore = PHP_FLOAT_MAX;
+            $motivoNaoAlocado = null;
+            
+            // Encontrar melhor tribo entre as válidas
             foreach ($tribos as $tribo) {
+                // VALIDAR REGRAS SOCIAIS PRIMEIRO (prioridade absoluta)
+                $infracao = $campista->retornaInfracaoNessaTribo($tribo->id);
+                if (!is_null($infracao)) {
+                    // Guardar motivo se for a primeira tentativa
+                    if ($motivoNaoAlocado === null) {
+                        $motivoNaoAlocado = $infracao;
+                    }
+                    continue; // Tribo inválida, pular
+                }
+                
                 // Verificar limite de 13 campistas
                 if ($tribo->campistas()->count() >= 13) {
-                    continue;
+                    continue; // Tribo cheia
                 }
-
-                // USAR retornaInfracaoNessaTribo() que já valida TODAS as regras
-                // (conhecidos, confidentes, limite, gênero)
-                if (is_null($campista->retornaInfracaoNessaTribo($tribo->id))) {
-                    $campista->tribo_id = $tribo->id;
-                    $campista->save();
-                    break; // Campista alocado, ir para o próximo
+                
+                // Calcular score de balanceamento
+                $score = $this->calcularScoreBalanceamento($campista, $tribo, $mediasGlobais);
+                
+                // Escolher tribo com menor score (melhor balanceamento)
+                if ($score < $menorScore) {
+                    $menorScore = $score;
+                    $melhorTribo = $tribo;
                 }
             }
+            
+            // Adicionar à melhor tribo encontrada
+            if ($melhorTribo) {
+                $campista->tribo_id = $melhorTribo->id;
+                $campista->save();
+                $alocados++;
+            } else {
+                // Campista não pôde ser alocado
+                $naoAlocados++;
+                $campistasNaoAlocados[] = [
+                    'nome' => $campista->nome,
+                    'motivo' => $motivoNaoAlocado ?? 'Não há tribos disponíveis que respeitem as regras'
+                ];
+            }
         }
+        
+        return [
+            'alocados' => $alocados,
+            'naoAlocados' => $naoAlocados,
+            'campistasNaoAlocados' => $campistasNaoAlocados
+        ];
     }
 
     public function getConhecidos(Campista $campista)
@@ -225,10 +368,18 @@ class CampistaController extends Controller
         if (($handle = fopen($caminho, 'r')) !== false) {
             // Pular o cabeçalho (primeira linha)
             $cabecalho = fgetcsv($handle, 0, ',');
+            $numeroLinha = 1; // Começar em 1 porque já pulamos o cabeçalho
             
             while (($linha = fgetcsv($handle, 0, ',')) !== false) {
+                $numeroLinha++;
                 $linhasProcessadas++;
                 $nomeCampista = null;
+                
+                // Verificar se a linha está vazia
+                if (empty(array_filter($linha, function($campo) { return trim($campo) !== ''; }))) {
+                    $errosDetalhados[] = "Linha {$numeroLinha} - Linha vazia ignorada";
+                    continue;
+                }
                 
                 try {
                     // Mapear colunas do CSV
@@ -237,10 +388,11 @@ class CampistaController extends Controller
                     // Coluna 10 (índice 9): Peso
                     // Coluna 11 (índice 10): Altura
                     
-                    if (count($linha) < 11) {
+                    $numColunas = count($linha);
+                    if ($numColunas < 11) {
                         $erros++;
                         $nomeCampista = !empty($linha[1]) ? trim($linha[1]) : 'Nome não disponível';
-                        $errosDetalhados[] = "Linha {$linhasProcessadas} - Campista: '{$nomeCampista}' - Erro: Dados insuficientes na linha";
+                        $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro: Dados insuficientes na linha (apenas {$numColunas} colunas encontradas, esperado 11+)";
                         continue;
                     }
 
@@ -280,7 +432,7 @@ class CampistaController extends Controller
 
                     if (!$genero) {
                         $erros++;
-                        $errosDetalhados[] = "Linha {$linhasProcessadas} - Campista: '{$nomeCampista}' - Erro: Sexo inválido ('{$sexo}') - valor normalizado: '{$sexoLimpo}'";
+                        $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro: Sexo inválido ('{$sexo}') - valor normalizado: '{$sexoLimpo}'";
                         continue;
                     }
 
@@ -288,7 +440,7 @@ class CampistaController extends Controller
                     $pesoLimpo = $this->limparNumero($peso);
                     if ($pesoLimpo === null || $pesoLimpo <= 0) {
                         $erros++;
-                        $errosDetalhados[] = "Linha {$linhasProcessadas} - Campista: '{$nomeCampista}' - Erro: Peso inválido ({$peso})";
+                        $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro: Peso inválido ou vazio (valor original: '{$peso}')";
                         continue;
                     }
 
@@ -296,7 +448,7 @@ class CampistaController extends Controller
                     $alturaLimpa = $this->limparAltura($altura);
                     if ($alturaLimpa === null || $alturaLimpa <= 0) {
                         $erros++;
-                        $errosDetalhados[] = "Linha {$linhasProcessadas} - Campista: '{$nomeCampista}' - Erro: Altura inválida ({$altura})";
+                        $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro: Altura inválida ou vazia (valor original: '{$altura}')";
                         continue;
                     }
 
@@ -312,7 +464,7 @@ class CampistaController extends Controller
                             $sucessos++;
                         } catch (\Exception $e) {
                             $erros++;
-                            $errosDetalhados[] = "Linha {$linhasProcessadas} - Campista: '{$nomeCampista}' - Erro ao atualizar: " . $e->getMessage();
+                            $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro ao atualizar: " . $e->getMessage();
                         }
                     } else {
                         // Criar novo campista
@@ -326,23 +478,35 @@ class CampistaController extends Controller
                             $sucessos++;
                         } catch (\Exception $e) {
                             $erros++;
-                            $errosDetalhados[] = "Linha {$linhasProcessadas} - Campista: '{$nomeCampista}' - Erro ao criar: " . $e->getMessage();
+                            $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro ao criar: " . $e->getMessage();
                         }
                     }
 
                 } catch (\Exception $e) {
                     $erros++;
                     $nomeErro = $nomeCampista ?? (!empty($linha[1]) ? trim($linha[1]) : 'Nome não disponível');
-                    $errosDetalhados[] = "Linha {$linhasProcessadas} - Campista: '{$nomeErro}' - Erro inesperado: " . $e->getMessage();
+                    $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeErro}' - Erro inesperado: " . $e->getMessage();
                 }
             }
             fclose($handle);
         }
 
+        // Contar linhas vazias ignoradas
+        $linhasVazias = count(array_filter($errosDetalhados, function($erro) {
+            return strpos($erro, 'Linha vazia ignorada') !== false;
+        }));
+        
+        $totalLinhasArquivo = $numeroLinha; // Último número de linha processado
+        $totalEsperado = $totalLinhasArquivo - 1; // Menos o cabeçalho
+        
         $mensagem = "Importação concluída! {$sucessos} campista(s) importado(s) com sucesso.";
         if ($erros > 0) {
-            $mensagem .= " {$erros} erro(s) encontrado(s). Verifique os detalhes abaixo.";
+            $mensagem .= " {$erros} erro(s) encontrado(s).";
         }
+        if ($linhasVazias > 0) {
+            $mensagem .= " {$linhasVazias} linha(s) vazia(s) ignorada(s).";
+        }
+        $mensagem .= " Total de linhas processadas: {$linhasProcessadas} (esperado: {$totalEsperado}).";
 
         return redirect()->back()->with([
             'success' => $mensagem,
@@ -350,6 +514,8 @@ class CampistaController extends Controller
                 'sucessos' => $sucessos,
                 'erros' => $erros,
                 'total' => $linhasProcessadas,
+                'total_esperado' => $totalEsperado,
+                'linhas_vazias' => $linhasVazias,
                 'erros_detalhados' => $errosDetalhados // Mostrar todos os erros
             ]
         ]);

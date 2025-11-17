@@ -121,5 +121,42 @@ class Campista extends Model
         return true;
     }
 
+    /**
+     * Retorna o motivo da invalidade do campista na sua tribo atual
+     * Retorna null se o campista está válido
+     */
+    public function retornaMotivoInvalidade(): ?string
+    {
+        if (!$this->tribo) {
+            return null;
+        }
+
+        $triboId = $this->tribo_id;
+        $motivos = [];
+
+        // Verificar confidentes conhecidos
+        foreach ($this->confidentesConhecidos as $confidente) {
+            if ($confidente->tribo_id == $triboId) {
+                $motivos[] = "Conhece o confidente {$confidente->nome}";
+            }
+        }
+
+        // Verificar campistas conhecidos (bidirecional)
+        foreach ($this->conhecidos as $conhecido) {
+            if ($conhecido->tribo && $conhecido->tribo->id == $triboId) {
+                $motivos[] = "Conhece o campista {$conhecido->nome}";
+            }
+        }
+
+        // Verificar se algum campista na tribo conhece este campista
+        foreach ($this->tribo->campistas as $campistaNaTribo) {
+            if ($campistaNaTribo->id !== $this->id && $campistaNaTribo->conhecidos->contains($this)) {
+                $motivos[] = "É conhecido pelo campista {$campistaNaTribo->nome}";
+            }
+        }
+
+        return !empty($motivos) ? implode(', ', $motivos) : null;
+    }
+
 
 }
