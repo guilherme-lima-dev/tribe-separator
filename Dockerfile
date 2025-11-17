@@ -59,19 +59,18 @@ RUN chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
 
 # Script de inicialização
-RUN echo '#!/bin/sh' > /usr/local/bin/start.sh && \
-    echo 'set -e' >> /usr/local/bin/start.sh && \
-    echo 'php artisan migrate --force --no-interaction || true' >> /usr/local/bin/start.sh && \
-    echo 'php artisan config:clear' >> /usr/local/bin/start.sh && \
-    echo 'php artisan cache:clear' >> /usr/local/bin/start.sh && \
-    echo 'php artisan view:clear' >> /usr/local/bin/start.sh && \
-    echo 'php artisan route:clear' >> /usr/local/bin/start.sh && \
-    echo 'php artisan config:cache' >> /usr/local/bin/start.sh && \
-    echo 'php artisan route:cache' >> /usr/local/bin/start.sh && \
-    echo 'php artisan view:cache' >> /usr/local/bin/start.sh && \
-    echo 'php artisan serve --host=0.0.0.0 --port=${PORT:-8000}' >> /usr/local/bin/start.sh
-
-RUN chmod +x /usr/local/bin/start.sh
+RUN printf '#!/bin/sh\n\
+set -e\n\
+php artisan migrate --force --no-interaction || true\n\
+php artisan config:clear\n\
+php artisan cache:clear\n\
+php artisan view:clear\n\
+php artisan route:clear\n\
+php artisan config:cache\n\
+php artisan route:cache\n\
+php artisan view:cache\n\
+exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}\n' > /usr/local/bin/start.sh && \
+    chmod +x /usr/local/bin/start.sh
 
 EXPOSE 8000
 
