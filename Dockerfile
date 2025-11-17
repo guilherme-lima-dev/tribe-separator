@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Copiar arquivos de dependências primeiro
 COPY package*.json ./
+COPY package-lock.json* ./
 RUN npm ci
 
 # Copiar arquivos de configuração
