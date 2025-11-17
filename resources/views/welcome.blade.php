@@ -1,519 +1,1622 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="theme-color" content="#000000"/>
+    <meta name="theme-color" content="#2E8B57"/>
     <link rel="shortcut icon" href="./assets/img/favicon.ico"/>
-    <link rel="apple-touch-icon" sizes="76x76" href="./assets/img/apple-icon.png"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/gh/creativetimofficial/tailwind-starter-kit/compiled-tailwind.min.css"/>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet"/>
-
     <style>
-        .bg-pink-500 {
-            background-color: #2E8B57 !important;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
         }
-
-        .active:bg-pink-600 {
-            background-color: #2E8B57 !important;
+        
+        .bg-maanaim {
+            background: linear-gradient(135deg, #2E8B57 0%, #228B22 100%);
         }
-
-        .bg-invalid {
-            background-color: #FFCDD2; /* Fundo vermelho claro */
+        
+        .card-hover {
+            transition: all 0.3s ease;
         }
-
-        #modalConhecidos, #modalConfidentes {
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important; /* Sombra suave */
-            background: rgba(0, 0, 0, 0.8);
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
-
+        
+        .badge-valid {
+            @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800;
+        }
+        
+        .badge-invalid {
+            @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
+        }
+        
+        .btn-primary {
+            @apply bg-[#2E8B57] hover:bg-[#228B22] text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200;
+        }
+        
+        .btn-secondary {
+            @apply bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200;
+        }
+        
+        .btn-danger {
+            @apply bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200;
+        }
+        
+        .input-modern {
+            @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2E8B57] focus:border-transparent transition-all;
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+        }
+        
+        .tribo-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 0;
+            border: 1px solid #e5e7eb;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .tribo-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2E8B57 0%, #228B22 100%);
+            z-index: 1;
+        }
+        
+        .tribo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border-color: #2E8B57;
+        }
+        
+        .tribo-card-content {
+            padding: 1.5rem;
+        }
+        
+        .stat-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+        
+        .stat-badge:hover {
+            background: linear-gradient(to bottom right, #f3f4f6, #e5e7eb);
+            border-color: #d1d5db;
+            transform: translateY(-1px);
+        }
+        
+        .tribo-header {
+            background: linear-gradient(to right, #2E8B57, #228B22);
+            color: white;
+            margin-bottom: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 1rem 1rem 0 0;
+        }
+        
+        .campista-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.625rem;
+            border-radius: 0.5rem;
+            border: 1px solid;
+            transition: all 0.2s ease;
+        }
+        
+        .campista-item:hover {
+            transform: translateX(2px);
+        }
+        
+        .action-card {
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .action-card:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Animações */
+        .modal-enter {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        .modal-exit {
+            animation: modalFadeOut 0.3s ease-in;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes modalFadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+        
+        .list-item-enter {
+            animation: slideInLeft 0.3s ease-out;
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #2E8B57;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
-    <title>Maanaim | Separação de tribos</title>
+    <title>Maanaim | Separação de Tribos</title>
 </head>
-<body class="text-blueGray-700 antialiased">
-<noscript>You need to enable JavaScript to run this app.</noscript>
-<div id="root">
-    <div class="relative bg-blueGray-50">
-        <nav style="background: #2E8B57 !important"
-             class="absolute top-0 left-0 w-full z-10 bg-transparent md:flex-row md:flex-nowrap md:justify-start flex items-center p-4">
-            <div class="w-full mx-auto items-center flex justify-between md:flex-nowrap flex-wrap md:px-10 px-4">
-                <a class="text-white text-sm uppercase hidden lg:inline-block font-semibold" href="./index.html">Maanaim
-                    - Separação de tribos</a>
+<body class="bg-gray-50 antialiased">
+    <!-- Navbar -->
+    <nav class="bg-maanaim shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-users text-white text-xl mr-3"></i>
+                    <h1 class="text-white text-lg font-bold">Maanaim - Separação de Tribos</h1>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="abrirModalAdicionarTribo()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Nova Tribo
+                    </button>
+                    <button onclick="abrirModalAdicionarCampista()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-user-plus mr-2"></i>Novo Campista
+                    </button>
+                    <a href="/confidentes" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-user-tie mr-2"></i>Confidentes
+                    </a>
+                </div>
+            </div>
             </div>
         </nav>
-        <div class="relative md:pt-32 pb-16 pt-12">
-            <div>
+
+    <!-- Alertas -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
                 @if (session('success'))
-                    <div class="bg-green-500 text-white text-sm font-bold px-4 py-3 rounded mb-4">
-                        {{ session('success') }}
+            <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-4">
+                <div class="flex items-center mb-2">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span class="font-semibold">{{ session('success') }}</span>
+                </div>
+                @if (session('importacao_detalhes'))
+                    @php
+                        $detalhes = session('importacao_detalhes');
+                    @endphp
+                    <div class="mt-3 text-sm">
+                        <div class="grid grid-cols-3 gap-4 mb-2">
+                            <div>
+                                <span class="font-medium">Total processado:</span> {{ $detalhes['total'] }}
+                            </div>
+                            <div class="text-green-700">
+                                <span class="font-medium">Sucessos:</span> {{ $detalhes['sucessos'] }}
+                            </div>
+                            <div class="text-red-700">
+                                <span class="font-medium">Erros:</span> {{ $detalhes['erros'] }}
+                            </div>
+                        </div>
+                        @if (!empty($detalhes['erros_detalhados']))
+                            <details class="mt-2">
+                                <summary class="cursor-pointer text-red-600 font-medium">Ver detalhes dos erros</summary>
+                                <ul class="mt-2 space-y-1 text-xs">
+                                    @foreach ($detalhes['erros_detalhados'] as $erro)
+                                        <li class="text-red-600">• {{ $erro }}</li>
+                                    @endforeach
+                                </ul>
+                            </details>
+                        @endif
+                    </div>
+                @endif
                     </div>
                 @endif
 
                 @if (session('warning'))
-                    <div class="bg-yellow-500 text-white text-sm font-bold px-4 py-3 rounded mb-4">
-                        {{ session('warning') }}
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-4 flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <span>{{ session('warning') }}</span>
                     </div>
                 @endif
 
                 @if (session('error'))
-                    <div class="bg-red-500 text-white text-sm font-bold px-4 py-3 rounded mb-4">
-                        {{ session('error') }}
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4 flex items-center">
+                <i class="fas fa-times-circle mr-2"></i>
+                <span>{{ session('error') }}</span>
                     </div>
                 @endif
             </div>
-            <div class="px-4 md:px-10 mx-auto w-full">
-                <div class="flex flex-wrap mb-4">
-                    <button onclick="montarTribos()"
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Montar Tribos
+
+    <!-- Loading Overlay Global -->
+    <div id="loadingOverlay" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black bg-opacity-50 modal-backdrop">
+        <div class="bg-white rounded-xl shadow-2xl p-8 text-center modal-enter">
+            <div class="spinner mx-auto mb-4"></div>
+            <p id="loadingText" class="text-gray-700 font-medium text-lg">Processando...</p>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Ações Principais -->
+        <div class="mb-6">
+            <h2 class="text-base font-semibold text-gray-700 mb-3 flex items-center">
+                <i class="fas fa-bolt mr-2 text-yellow-500"></i>
+                Ações Rápidas
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Botão Montar Tribos -->
+                <button id="btnMontarTribos" onclick="montarTribos(event)" 
+                        class="action-card bg-gradient-to-br from-[#2E8B57] to-[#228B22] hover:from-[#228B22] hover:to-[#1e7a1e] text-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 group">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center flex-1">
+                            <div class="bg-white/20 rounded-lg p-2.5 mr-3 group-hover:bg-white/30 transition-colors">
+                                <i class="fas fa-magic text-lg"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-base font-bold mb-0.5">Montar Tribos</h3>
+                                <p class="text-xs text-white/85">Distribuição automática respeitando as regras</p>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <i class="fas fa-arrow-right text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all text-sm"></i>
+                        </div>
+                    </div>
                     </button>
 
+                <!-- Botão Importar CSV -->
+                <button onclick="abrirModalImportarCSV()" 
+                        class="action-card bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 group">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center flex-1">
+                            <div class="bg-white/20 rounded-lg p-2.5 mr-3 group-hover:bg-white/30 transition-colors">
+                                <i class="fas fa-file-upload text-lg"></i>
                 </div>
-                <div class="flex flex-wrap">
-                    @foreach($tribos as $tribo)
-                        <div class="w-full xl:w-4/12 mb-12 xl:mb-0 px-4">
-                            <div
-                                class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded">
-                                <div class="rounded-t mb-0 px-4 py-3 border-0">
-                                    <div class="flex flex-wrap items-center">
-                                        <div class="relative w-full px-4 max-w-full flex-grow flex-1">
-                                            <h3 class="font-semibold text-base text-blueGray-700">
-                                                Tribo {{ $tribo->nome_tribo }}
-                                                - {{ $tribo->confidentes->pluck('nome')->join(', ', ' e ') }}
-                                            </h3>
-                                            <p class="text-sm {{ $tribo->estaValida() ? 'text-green-500' : 'text-red-500' }}">
-                                                {{ $tribo->estaValida() ? 'Tribo está válida' : 'Tribo não está válida' }}
-                                            </p>
+                            <div class="flex-1">
+                                <h3 class="text-base font-bold mb-0.5">Importar CSV</h3>
+                                <p class="text-xs text-white/85">Importe múltiplos campistas de uma vez</p>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <i class="fas fa-arrow-right text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all text-sm"></i>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Painel de Estatísticas Globais -->
+        @php
+            $totalCampistas = $campistas->count();
+            $campistasSemTribo = $campistas->where('tribo_id', null)->count();
+            $campistasComTribo = $totalCampistas - $campistasSemTribo;
+            $pesoMedioGlobal = $campistas->avg('peso');
+            $alturaMediaGlobal = $campistas->avg('altura');
+            $percentualAlocado = $totalCampistas > 0 ? ($campistasComTribo / $totalCampistas) * 100 : 0;
+                                            @endphp
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <!-- Card 1: Total de Campistas -->
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total de Campistas</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ $totalCampistas }}</p>
+                                            </div>
+                    <div class="bg-blue-100 rounded-full p-4">
+                        <i class="fas fa-users text-2xl text-blue-600"></i>
+                                        </div>
+                                    </div>
+                                </div>
+            
+            <!-- Card 2: Campistas Alocados -->
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Campistas Alocados</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ $campistasComTribo }}</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ number_format($percentualAlocado, 1) }}% do total</p>
+                                </div>
+                    <div class="bg-green-100 rounded-full p-4">
+                        <i class="fas fa-check-circle text-2xl text-green-600"></i>
+                            </div>
+                        </div>
+                </div>
+
+            <!-- Card 3: Campistas Sem Tribo -->
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 {{ $campistasSemTribo > 0 ? 'border-yellow-500' : 'border-gray-300' }} card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Sem Tribo</p>
+                        <p class="text-3xl font-bold text-gray-800">{{ $campistasSemTribo }}</p>
+                        @if($campistasSemTribo > 0)
+                            <p class="text-xs text-yellow-600 mt-1 font-medium">Requer atenção</p>
+                        @endif
+            </div>
+                    <div class="rounded-full p-4 {{ $campistasSemTribo > 0 ? 'bg-yellow-100' : 'bg-gray-100' }}">
+                        <i class="fas fa-user-slash text-2xl {{ $campistasSemTribo > 0 ? 'text-yellow-600' : 'text-gray-600' }}"></i>
+        </div>
+                </div>
+            </div>
+            
+            <!-- Card 4: Médias Globais -->
+            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Médias Globais</p>
+                        <p class="text-lg font-bold text-gray-800">{{ number_format($pesoMedioGlobal, 1) }} kg</p>
+                        <p class="text-lg font-bold text-gray-800">{{ number_format($alturaMediaGlobal, 1) }} cm</p>
+                    </div>
+                    <div class="bg-purple-100 rounded-full p-4">
+                        <i class="fas fa-chart-line text-2xl text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid de Tribos -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-layer-group mr-2 text-[#2E8B57]"></i>
+                Tribos
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @forelse($tribos as $tribo)
                                             @php
                                                 $totalCampistas = $tribo->campistas->count();
                                                 $pesoMedio = $totalCampistas > 0 ? $tribo->campistas->avg('peso') : 0;
                                                 $alturaMedia = $totalCampistas > 0 ? $tribo->campistas->avg('altura') : 0;
                                                 $numHomens = $tribo->campistas->where('genero', 'm')->count();
                                                 $numMulheres = $tribo->campistas->where('genero', 'f')->count();
+                        
+                        // Cálculo de balanceamento
+                        $desvioPeso = $totalCampistas > 0 && $pesoMedioGlobal > 0 ? abs($pesoMedio - $pesoMedioGlobal) : 0;
+                        $desvioAltura = $totalCampistas > 0 && $alturaMediaGlobal > 0 ? abs($alturaMedia - $alturaMediaGlobal) : 0;
+                        $desvioPercentualPeso = $pesoMedioGlobal > 0 ? ($desvioPeso / $pesoMedioGlobal) * 100 : 0;
+                        $desvioPercentualAltura = $alturaMediaGlobal > 0 ? ($desvioAltura / $alturaMediaGlobal) * 100 : 0;
+                        
+                        $balanceamentoPeso = $desvioPercentualPeso < 5 ? 'ótimo' : ($desvioPercentualPeso < 10 ? 'bom' : 'ruim');
+                        $balanceamentoAltura = $desvioPercentualAltura < 5 ? 'ótimo' : ($desvioPercentualAltura < 10 ? 'bom' : 'ruim');
                                             @endphp
-                                            <div class="text-sm text-blueGray-600">
-                                                <p>Média de peso: {{ number_format($pesoMedio, 2) }} kg</p>
-                                                <p>Média de altura: {{ number_format($alturaMedia, 2) }} cm</p>
-                                                <p>Homens: {{ $numHomens }}</p>
-                                                <p>Mulheres: {{ $numMulheres }}</p>
+                    <div class="tribo-card">
+                        <!-- Header com gradiente -->
+                        <div class="tribo-header">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h3 class="text-xl font-bold mb-1 flex items-center">
+                                        <i class="fas fa-layer-group mr-2"></i>
+                                        Tribo {{ $tribo->nome_tribo }}
+                                    </h3>
+                                    @if($tribo->confidentes->count() > 0)
+                                        <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                                            <i class="fas fa-user-tie text-purple-400 text-xs"></i>
+                                            <span class="text-xs opacity-90">
+                                                {{ $tribo->confidentes->pluck('nome')->join(', ', ' e ') }}
+                                            </span>
+                                        </div>
+                                    @endif
                                             </div>
+                                <div class="flex gap-2 ml-3">
+                                    <button onclick="abrirModalEditarTribo({{ $tribo->id }}, '{{ $tribo->nome_tribo }}')" 
+                                            class="opacity-80 hover:opacity-100 hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-all"
+                                            title="Editar tribo">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="removerTribo({{ $tribo->id }})" 
+                                            class="opacity-80 hover:opacity-100 hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-all"
+                                            title="Excluir tribo">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="block w-full overflow-x-auto">
-                                    <table class="items-center w-full bg-transparent border-collapse">
-                                        <tbody>
-                                        @forelse($tribo->campistas as $key => $campista)
-                                            <tr class="{{ $campista->campistaAtendeARegra() ? '' : 'bg-invalid' }}">
-                                                <th class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left">
-                                                    {{ $key + 1 }} - {{ $campista->nome }}
-                                                    <form action="/remover-da-tribo/{{ $campista->id }}" method="POST">
-                                                        @csrf
-                                                        <button class="text-red-500 font-bold text-xs rounded"
-                                                                type="submit">
-                                                            Remover da Tribo
-                                                        </button>
-                                                    </form>
-                                                </th>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <th class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left">
-                                                    Nenhum campista alocado na tribo
-                                                </th>
-                                            </tr>
-                                        @endforelse
-                                        </tbody>
-                                    </table>
+
+                        <div class="tribo-card-content">
+                            <!-- Status Badge -->
+                            <div class="mb-4">
+                                @if($tribo->estaValida())
+                                    <span class="badge-valid">
+                                        <i class="fas fa-check-circle mr-1"></i>Válida
+                                    </span>
+                                @else
+                                    <span class="badge-invalid">
+                                        <i class="fas fa-times-circle mr-1"></i>Inválida
+                                    </span>
+                                @endif
                                 </div>
+
+                            <!-- Estatísticas -->
+                            <div class="grid grid-cols-2 gap-2.5 mb-4">
+                                <div class="stat-badge">
+                                    <i class="fas fa-users mr-1.5" style="color: #2E8B57;"></i>
+                                    <span class="font-semibold">{{ $totalCampistas }}</span>
+                                    <span class="text-gray-500">/13</span>
                             </div>
+                                <div class="stat-badge">
+                                    <i class="fas fa-mars mr-1.5" style="color: #3b82f6;"></i>
+                                    <span class="font-semibold">{{ $numHomens }}</span>
+                                    <span class="text-gray-500">H</span>
                         </div>
-                    @endforeach
+                                <div class="stat-badge">
+                                    <i class="fas fa-venus mr-1.5" style="color: #ec4899;"></i>
+                                    <span class="font-semibold">{{ $numMulheres }}</span>
+                                    <span class="text-gray-500">M</span>
                 </div>
-
+                                <div class="stat-badge relative group cursor-help">
+                                    <i class="fas fa-weight mr-1.5" style="color: #f97316;"></i>
+                                    <span class="font-semibold">{{ number_format($pesoMedio, 1) }}</span>
+                                    <span class="text-gray-500">kg</span>
+                                    @if($totalCampistas > 0 && $pesoMedioGlobal > 0)
+                                        <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none shadow-xl">
+                                            Média global: {{ number_format($pesoMedioGlobal, 1) }}kg<br>
+                                            Desvio: {{ number_format($desvioPercentualPeso, 1) }}%
+                                            @if($balanceamentoPeso === 'ótimo')
+                                                <span style="color: #4ade80;">✓ Ótimo</span>
+                                            @elseif($balanceamentoPeso === 'bom')
+                                                <span style="color: #fbbf24;">⚠ Aceitável</span>
+                                            @else
+                                                <span style="color: #f87171;">✗ Desbalanceado</span>
+                                            @endif
+                                        </span>
+                                    @endif
             </div>
+                                <div class="stat-badge relative group cursor-help">
+                                    <i class="fas fa-ruler-vertical mr-1.5" style="color: #a855f7;"></i>
+                                    <span class="font-semibold">{{ number_format($alturaMedia, 1) }}</span>
+                                    <span class="text-gray-500">cm</span>
+                                    @if($totalCampistas > 0 && $alturaMediaGlobal > 0)
+                                        <span class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none shadow-xl">
+                                            Média global: {{ number_format($alturaMediaGlobal, 1) }}cm<br>
+                                            Desvio: {{ number_format($desvioPercentualAltura, 1) }}%
+                                            @if($balanceamentoAltura === 'ótimo')
+                                                <span style="color: #4ade80;">✓ Ótimo</span>
+                                            @elseif($balanceamentoAltura === 'bom')
+                                                <span style="color: #fbbf24;">⚠ Aceitável</span>
+                                            @else
+                                                <span style="color: #f87171;">✗ Desbalanceado</span>
+                                            @endif
+                                        </span>
+                                    @endif
         </div>
-        <div class="flex flex-wrap mt-2">
-            <div class="w-full">
-                <!-- Botão para abrir a modal de adicionar campista -->
-                <button onclick="abrirModalAdicionarCampista()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 ml-4 mb-4 px-4 rounded">
-                    Adicionar Campista
-                </button>
+                            </div>
+                            
+                            @if($totalCampistas > 0 && ($pesoMedioGlobal > 0 || $alturaMediaGlobal > 0))
+                                <!-- Indicador Visual de Balanceamento -->
+                                <div class="mb-4 p-3 rounded-xl {{ $balanceamentoPeso === 'ótimo' && $balanceamentoAltura === 'ótimo' ? 'bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200' : ($balanceamentoPeso === 'ruim' || $balanceamentoAltura === 'ruim' ? 'bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-200' : 'bg-gradient-to-r from-yellow-50 to-yellow-100 border-2 border-yellow-200') }}">
+                                    <p class="text-xs text-center font-semibold">
+                                        @if($balanceamentoPeso === 'ótimo' && $balanceamentoAltura === 'ótimo')
+                                            <i class="fas fa-check-circle text-green-600 mr-1"></i>
+                                            <span class="text-green-700">Tribo bem balanceada</span>
+                                        @elseif($balanceamentoPeso === 'ruim' || $balanceamentoAltura === 'ruim')
+                                            <i class="fas fa-exclamation-triangle text-red-600 mr-1"></i>
+                                            <span class="text-red-700">Tribo desbalanceada</span>
+                                        @else
+                                            <i class="fas fa-info-circle text-yellow-600 mr-1"></i>
+                                            <span class="text-yellow-700">Balanceamento aceitável</span>
+                                        @endif
+                                    </p>
+                                </div>
+                            @endif
 
-                <!-- Modal para adicionar novo campista -->
-                <div id="modalAdicionarCampista" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black bg-opacity-30">
-                    <div onclick="fecharModalAdicionarCampista()" class="absolute inset-0"></div>
-                    <div class="bg-white w-50 max-w-lg p-6 rounded-lg shadow-lg relative z-10 mx-4">
+                            <!-- Confidentes da Tribo -->
+                            @if($tribo->confidentes->count() > 0)
+                                <div class="border-t border-gray-200 pt-4 mb-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                                            <i class="fas fa-user-tie mr-1.5" style="color: #9333ea;"></i>Confidentes
+                                        </p>
+                                        <span class="text-xs text-gray-500 bg-purple-100 px-2 py-1 rounded-full">
+                                            {{ $tribo->confidentes->count() }} {{ $tribo->confidentes->count() === 1 ? 'confidente' : 'confidentes' }}
+                                        </span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($tribo->confidentes as $confidente)
+                                            <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                                                <i class="fas fa-user-tie mr-1.5 text-purple-600"></i>
+                                                {{ $confidente->nome }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
 
-                        <!-- Botão de Fechar -->
-                        <button onclick="fecharModalAdicionarCampista()" style="top: 0.5%; right: 2%;" class="absolute text-gray-500 hover:text-gray-800 text-2xl font-bold">
-                            &times;
-                        </button>
-
-                        <!-- Formulário de Adicionar Campista -->
-                        <h2 class="text-2xl font-semibold text-center text-gray-800 mb-4">Adicionar Campista</h2>
-                        <form id="formAdicionarCampista" onsubmit="adicionarCampista(event)">
-                            <label class="block mb-2 text-gray-700 font-semibold">Nome</label>
-                            <input type="text" id="nomeCampista" required class="w-full px-3 py-2 border rounded mb-2">
-
-                            <label class="block mb-2 text-gray-700 font-semibold">Gênero</label>
-                            <select id="generoCampista" required class="w-full px-3 py-2 border rounded mb-2">
-                                <option value="m">Masculino</option>
-                                <option value="f">Feminino</option>
-                            </select>
-
-                            <label class="block mb-2 text-gray-700 font-semibold">Peso (kg)</label>
-                            <input type="number" id="pesoCampista" required class="w-full px-3 py-2 border rounded mb-2">
-
-                            <label class="block mb-2 text-gray-700 font-semibold">Altura (cm)</label>
-                            <input type="number" id="alturaCampista" required class="w-full px-3 py-2 border rounded mb-2">
-
-                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
-                                Adicionar
+                            <!-- Lista de Campistas -->
+                            <div class="border-t border-gray-200 pt-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <p class="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                                        <i class="fas fa-users mr-1.5" style="color: #2E8B57;"></i>Campistas
+                                    </p>
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                        {{ $totalCampistas }} {{ $totalCampistas === 1 ? 'campista' : 'campistas' }}
+                                    </span>
+                                </div>
+                                <div class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                                    @forelse($tribo->campistas as $key => $campista)
+                                        <div class="campista-item {{ $campista->campistaAtendeARegra() ? 'bg-gray-50 border-gray-200 hover:bg-gray-100' : 'bg-red-50 border-red-200 hover:bg-red-100' }}">
+                                            <span class="text-sm font-medium text-gray-800 flex items-center">
+                                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-opacity-10 text-xs font-bold mr-2" style="background-color: rgba(46, 139, 87, 0.1); color: #2E8B57;">
+                                                    {{ $key + 1 }}
+                                                </span>
+                                                {{ $campista->nome }}
+                                            </span>
+                                            <form action="/remover-da-tribo/{{ $campista->id }}" method="POST" class="inline" onsubmit="return confirmarRemoverDaTribo(event, '{{ $campista->nome }}')">
+                                                @csrf
+                                                <button type="submit" 
+                                                        class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg p-1.5 transition-all"
+                                                        title="Remover da tribo">
+                                                    <i class="fas fa-times text-xs"></i>
                             </button>
                         </form>
                     </div>
+                                    @empty
+                                        <div class="text-center py-6">
+                                            <i class="fas fa-user-slash text-3xl text-gray-300 mb-2"></i>
+                                            <p class="text-sm text-gray-400 italic">Nenhum campista alocado</p>
                 </div>
-
+                                    @endforelse
             </div>
-            <div class="w-full mb-4 px-4">
-                <!-- Campo de busca -->
-                <input type="text" id="searchInput" onkeyup="filterTable()"
-                       placeholder="Buscar campistas por nome, gênero, peso, altura..."
-                       class="px-3 py-2 border rounded w-full mb-4"/>
-
             </div>
-            <div class="w-full mb-12 xl:mb-0 px-4">
-                <div class="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded">
-                    <div class="rounded-t mb-0 px-4 py-3 border-0">
-                        <div class="flex flex-wrap items-center">
-                            <div class="relative w-full px-4 max-w-full flex-grow flex-1">
-                                <h3 class="font-semibold text-base text-blueGray-700">Campistas</h3>
                             </div>
                         </div>
+                @empty
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-layer-group text-6xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">Nenhuma tribo cadastrada</p>
+                        <button onclick="abrirModalAdicionarTribo()" class="btn-primary mt-4">
+                            <i class="fas fa-plus mr-2"></i>Criar Primeira Tribo
+                        </button>
                     </div>
-                    <div class="block w-full overflow-x-auto">
-                        <table id="campistaTable" class="items-center w-full bg-transparent border-collapse">
-                            <thead>
-                            <tr>
-                                <th class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left">
-                                    ID
-                                </th>
-                                <th class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left">
-                                    Nome
-                                </th>
-                                <th class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left">
-                                    Gênero
-                                </th>
-                                <th class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left">
-                                    Peso
-                                </th>
-                                <th class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left">
-                                    Altura
-                                </th>
-                                <th class="px-6 bg-blueGray-50 text-blueGray-500 align-middle border border-solid border-blueGray-100 py-3 text-xs uppercase border-l-0 border-r-0 whitespace-nowrap font-semibold text-left">
-                                    Ações
-                                </th>
+                @endforelse
+                    </div>
+                    </div>
+
+        <!-- Lista de Campistas -->
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-users mr-2 text-[#2E8B57]"></i>
+                    Campistas
+                </h2>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="searchInput" onkeyup="filterTable()"
+                           placeholder="Buscar campistas..."
+                           class="input-modern w-full sm:w-64">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600 whitespace-nowrap">Itens por página:</label>
+                        <select id="itemsPerPage" onchange="changeItemsPerPage()" class="input-modern w-24 text-sm">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="all">Todos</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Versão Desktop (tabela) -->
+            <div class="hidden md:block overflow-x-auto">
+                <table id="campistaTable" class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ID</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nome</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Gênero</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Peso</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Altura</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Ações</th>
                             </tr>
                             </thead>
-                            <tbody>
+                    <tbody id="campistaTableBody" class="divide-y divide-gray-200">
                             @foreach($campistas as $campista)
-                                <tr class="{{ $campista->campistaAtendeARegra() ? '' : 'bg-invalid' }}">
-                                    <th class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left">{{ $campista->id }}</th>
-                                    <th class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 text-left">{{ $campista->nome }}</th>
-                                    <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">{{ $campista->genero == 'm' ? 'Masculino' : 'Feminino' }}</td>
-                                    <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">{{ $campista->peso }}
-                                        Kg
+                            <tr id="row-{{ $campista->id }}" class="campista-row {{ $campista->campistaAtendeARegra() ? '' : 'bg-red-50' }} hover:bg-gray-50 transition-colors" data-campista-id="{{ $campista->id }}">
+                                <td class="px-4 py-3 text-sm text-gray-700">{{ $campista->id }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $campista->nome }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-700">
+                                    @if($campista->genero == 'm')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                            <i class="fas fa-mars mr-1"></i>Masculino
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-pink-100 text-pink-800">
+                                            <i class="fas fa-venus mr-1"></i>Feminino
+                                        </span>
+                                    @endif
                                     </td>
-                                    <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">{{ $campista->altura }}
-                                        cm
-                                    </td>
-                                    <td class="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4 flex ">
+                                <td class="px-4 py-3 text-sm text-gray-700">{{ $campista->peso }} kg</td>
+                                <td class="px-4 py-3 text-sm text-gray-700">{{ $campista->altura }} cm</td>
+                                <td class="px-4 py-3">
+                                    <div class="flex gap-2">
                                         @if(!empty($campista->tribo_id))
-                                            <form action="/remover-da-tribo/{{ $campista->id }}" method="POST">
+                                            <form action="/remover-da-tribo/{{ $campista->id }}" method="POST" class="inline" onsubmit="return confirmarRemoverDaTribo(event, '{{ $campista->nome }}')">
                                                 @csrf
-                                                <button
-                                                    class="bg-pink-600 active:bg-pink-600 text-white font-bold text-xs px-4 py-2 rounded"
-                                                    type="submit"
-                                                    style="height: 36px; line-height: normal;"
-                                                >
-                                                    Remover da Tribo
+                                                <button type="submit" class="text-orange-500 hover:text-orange-700 transition-colors" title="Remover da Tribo">
+                                                    <i class="fas fa-user-minus"></i>
                                                 </button>
                                             </form>
                                         @else
-                                            <div>
+                                            <div class="relative">
                                                 <button onclick="abrirListaTribos({{ $campista->id }})"
-                                                        class="bg-pink-500 active:bg-pink-600 uppercase text-white font-bold hover:shadow-md shadow text-xs px-4 py-2 rounded outline-none focus:outline-none mb-1"
-                                                        type="button"
-                                                        style="height: 36px; line-height: normal;"
-                                                >
-                                                    Adicionar a Tribo
+                                                        class="text-[#2E8B57] hover:text-[#228B22] transition-colors" title="Adicionar a Tribo">
+                                                    <i class="fas fa-user-plus"></i>
                                                 </button>
-                                                <div id="tribos-{{ $campista->id }}" class="hidden mt-2">
+                                                <div id="tribos-{{ $campista->id }}" class="hidden absolute mt-2 left-0 bg-white rounded-lg shadow-xl p-3 z-20 border w-96 max-h-96 overflow-y-auto">
                                                     @foreach($tribos as $tribo)
-                                                        <form
-                                                            action="/adicionar-a-tribo/{{ $campista->id }}/{{ $tribo->id }}"
-                                                            method="POST">
+                                                        @php
+                                                            $infracoes = $campista->retornaInfracaoNessaTribo($tribo->id);
+                                                            $podeAdicionar = is_null($infracoes);
+                                                        @endphp
+                                                        <div class="mb-2 p-3 rounded-lg border {{ $podeAdicionar ? 'border-gray-200 hover:border-[#2E8B57] hover:bg-green-50' : 'border-red-200 bg-red-50' }} transition-all">
+                                                            <form action="/adicionar-a-tribo/{{ $campista->id }}/{{ $tribo->id }}" method="POST">
                                                             @csrf
-                                                            <button
-                                                                @if(!is_null($campista->retornaInfracaoNessaTribo($tribo->id)))
-                                                                    style="background: #ccc" disabled
-                                                                class="cursor-not-allowed text-white font-bold text-xs px-4 py-2 rounded mb-1"
+                                                                <button type="submit" 
+                                                                        {{ $podeAdicionar ? '' : 'disabled' }}
+                                                                        class="w-full text-left {{ $podeAdicionar ? 'cursor-pointer' : 'cursor-not-allowed' }}">
+                                                                    <div class="flex items-center justify-between">
+                                                                        <div class="flex items-center">
+                                                                            <i class="fas fa-layer-group mr-2 {{ $podeAdicionar ? 'text-[#2E8B57]' : 'text-red-400' }}"></i>
+                                                                            <span class="font-medium {{ $podeAdicionar ? 'text-gray-800' : 'text-gray-400' }}">
+                                                                                {{ $tribo->nome_tribo }}
+                                                                            </span>
+                                                                        </div>
+                                                                        @if($podeAdicionar)
+                                                                            <span class="text-xs text-green-600 font-medium">
+                                                                                <i class="fas fa-check-circle mr-1"></i>Disponível
+                                                                            </span>
                                                                 @else
-                                                                    class="bg-green-500 hover:bg-green-700 text-white font-bold text-xs px-4 py-2 rounded mb-1"
+                                                                            <span class="text-xs text-red-600 font-medium">
+                                                                                <i class="fas fa-times-circle mr-1"></i>Bloqueado
+                                                                            </span>
                                                                 @endif
-                                                                type="submit"
-                                                                style="height: 36px; line-height: normal;"
-
-                                                            >
-                                                                Adicionar à {{ $tribo->nome_tribo }}
+                                                                    </div>
                                                             </button>
-                                                            <div class="font-bold">
-                                                                {{ $campista->retornaInfracaoNessaTribo($tribo->id) }}
+                                                                
+                                                                @if(!$podeAdicionar)
+                                                                    <div class="mt-2 pt-2 border-t border-red-200">
+                                                                        <p class="text-xs text-red-600">
+                                                                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                                            <strong>Motivo:</strong> {{ $infracoes }}
+                                                                        </p>
                                                             </div>
+                                                                @endif
                                                         </form>
+                                                        </div>
                                                     @endforeach
                                                 </div>
                                             </div>
-
                                         @endif
-                                        <button
-                                            onclick="abrirModalConhecidos({{ $campista->id }}, '{{ $campista->nome }}')"
-                                            class="bg-blue-500 ml-3 active:bg-blue-600 text-white font-bold text-xs px-4 py-2 rounded"
-                                            type="button"
-                                            style="height: 36px; line-height: normal;"
-                                        >
-                                            Ver conhecidos
+                                        <button onclick="abrirModalEditarCampista({{ $campista->id }}, {{ json_encode($campista->nome) }}, {{ json_encode($campista->genero) }}, {{ $campista->peso }}, {{ $campista->altura }})" 
+                                                class="text-green-500 hover:text-green-700 transition-colors" title="Editar">
+                                            <i class="fas fa-edit"></i>
                                         </button>
-                                        <button
-                                            onclick="abrirModalConfidentes({{ $campista->id }}, '{{ $campista->nome }}')"
-                                            class="bg-purple-500 ml-3 active:bg-purple-600 text-white font-bold text-xs px-4 py-2 rounded"
-                                            type="button"
-                                            style="height: 36px; line-height: normal;"
-                                        >
-                                            Ver confidentes conhecidos
+                                        <button onclick="abrirModalConhecidos({{ $campista->id }}, '{{ $campista->nome }}')" 
+                                                class="text-blue-500 hover:text-blue-700 transition-colors" title="Conhecidos">
+                                            <i class="fas fa-user-friends"></i>
                                         </button>
-                                        <button
-                                            style="height: 36px; line-height: normal;"
-                                            onclick="removerCampista({{ $campista->id }})" class="bg-red-500 active:bg-red-600 text-white font-bold text-xs px-4 py-2 rounded ml-3" >
-                                            Excluir Campista
+                                        <button onclick="abrirModalConfidentes({{ $campista->id }}, '{{ $campista->nome }}')" 
+                                                class="text-purple-500 hover:text-purple-700 transition-colors" title="Confidentes">
+                                            <i class="fas fa-user-tie"></i>
                                         </button>
+                                        <button onclick="removerCampista({{ $campista->id }}, '{{ $campista->nome }}', {{ !empty($campista->tribo_id) ? 'true' : 'false' }})" 
+                                                class="text-red-500 hover:text-red-700 transition-colors" title="Excluir">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                     </td>
                                 </tr>
                             @endforeach
                             </tbody>
                         </table>
                     </div>
+            
+            <!-- Versão Mobile (cards) -->
+            <div id="campistaCardsContainer" class="md:hidden space-y-3">
+                @foreach($campistas as $campista)
+                    <div id="card-{{ $campista->id }}" class="campista-card bg-white rounded-lg shadow p-4 {{ $campista->campistaAtendeARegra() ? '' : 'border-l-4 border-red-500' }}" data-campista-id="{{ $campista->id }}">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="font-bold text-gray-900">{{ $campista->nome }}</h3>
+                                <p class="text-sm text-gray-600">ID: {{ $campista->id }}</p>
                 </div>
+                            @if($campista->genero == 'm')
+                                <span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                    <i class="fas fa-mars mr-1"></i>M
+                                </span>
+                            @else
+                                <span class="px-2 py-1 rounded-full text-xs bg-pink-100 text-pink-800">
+                                    <i class="fas fa-venus mr-1"></i>F
+                                </span>
+                            @endif
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2 mb-3 text-sm">
+                            <div class="text-gray-600">
+                                <i class="fas fa-weight mr-1"></i>{{ $campista->peso }} kg
+                            </div>
+                            <div class="text-gray-600">
+                                <i class="fas fa-ruler-vertical mr-1"></i>{{ $campista->altura }} cm
             </div>
         </div>
 
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="abrirModalEditarCampista({{ $campista->id }}, {{ json_encode($campista->nome) }}, {{ json_encode($campista->genero) }}, {{ $campista->peso }}, {{ $campista->altura }})" class="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-lg">
+                                <i class="fas fa-edit mr-1"></i>Editar
+                            </button>
+                            @if(!empty($campista->tribo_id))
+                                <form action="/remover-da-tribo/{{ $campista->id }}" method="POST" class="inline" onsubmit="return confirmarRemoverDaTribo(event, '{{ $campista->nome }}')">
+                                    @csrf
+                                    <button type="submit" class="text-xs px-3 py-1 bg-orange-100 text-orange-700 rounded-lg">
+                                        <i class="fas fa-user-minus mr-1"></i>Remover da Tribo
+                                    </button>
+                                </form>
+                            @else
+                                <button onclick="abrirListaTribos({{ $campista->id }})" class="text-xs px-3 py-1 bg-[#2E8B57] text-white rounded-lg">
+                                    <i class="fas fa-user-plus mr-1"></i>Adicionar a Tribo
+                                </button>
+                            @endif
+                            <button onclick="abrirModalConhecidos({{ $campista->id }}, '{{ $campista->nome }}')" class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-lg">
+                                <i class="fas fa-user-friends mr-1"></i>Conhecidos
+                            </button>
+                            <button onclick="abrirModalConfidentes({{ $campista->id }}, '{{ $campista->nome }}')" class="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-lg">
+                                <i class="fas fa-user-tie mr-1"></i>Confidentes
+                            </button>
+                            <button onclick="removerCampista({{ $campista->id }}, '{{ $campista->nome }}', {{ !empty($campista->tribo_id) ? 'true' : 'false' }})" class="text-xs px-3 py-1 bg-red-100 text-red-700 rounded-lg">
+                                <i class="fas fa-trash mr-1"></i>Excluir
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            
+            <!-- Controles de Paginação -->
+            <div id="paginationControls" class="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-200">
+                <div class="text-sm text-gray-600">
+                    <span id="paginationInfo">Mostrando 0 de 0 campistas</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="prevPageBtn" onclick="changePage(-1)" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        <i class="fas fa-chevron-left mr-1"></i>Anterior
+                    </button>
+                    <div class="flex items-center gap-1">
+                        <span id="currentPage" class="px-3 py-2 text-sm font-medium text-gray-700">1</span>
+                        <span class="text-gray-500">de</span>
+                        <span id="totalPages" class="px-3 py-2 text-sm font-medium text-gray-700">1</span>
+                    </div>
+                    <button id="nextPageBtn" onclick="changePage(1)" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        Próximo<i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Modal com Estilos e Comportamento Atualizado -->
-        <div id="modalConhecidos"
-             class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black bg-opacity-30">
-            <div onclick="fecharModal()" class="absolute inset-0"></div>
-            <div class="bg-white w-50 max-w-lg p-6 rounded-lg shadow-lg relative z-10 mx-4"
-                 style="box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);">
-
-                <!-- Botão de Fechar -->
-                <button onclick="fecharModal()" style="top: 0.5%; right: 2%;"
-                        class="absolute text-gray-500 hover:text-gray-800 text-2xl font-bold">
-                    &times;
+    <!-- Modal Adicionar/Editar Tribo -->
+    <div id="modalTribo" class="fixed inset-0 hidden z-50 flex items-center justify-center modal-backdrop">
+        <div onclick="fecharModalTribo()" class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div id="modalTriboContent" class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative z-10 mx-4 max-h-[90vh] overflow-y-auto">
+            <button onclick="fecharModalTribo()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
                 </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4" id="modalTriboTitulo">Adicionar Tribo</h2>
+            <form id="formTribo" onsubmit="salvarTribo(event)">
+                <input type="hidden" id="triboId">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-layer-group mr-2 text-[#2E8B57]"></i>Nome da Tribo
+                    </label>
+                    <input type="text" id="nomeTribo" required class="input-modern" placeholder="Ex: Tribo Leão">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-user-tie mr-2 text-purple-600"></i>Confidentes da Tribo
+                    </label>
+                    <p class="text-xs text-gray-500 mb-2">Selecione os confidentes que serão atribuídos a esta tribo</p>
+                    <div id="confidentesContainer" class="border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto bg-gray-50">
+                        @forelse($confidentes as $confidente)
+                            <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer transition-colors mb-1">
+                                <input type="checkbox" 
+                                       name="confidentes_ids[]" 
+                                       value="{{ $confidente->id }}" 
+                                       class="confidente-checkbox mr-3 rounded border-gray-300 text-[#2E8B57] focus:ring-[#2E8B57]"
+                                       data-confidente-id="{{ $confidente->id }}">
+                                <span class="text-sm text-gray-700 flex-1">
+                                    {{ $confidente->nome }}
+                                    @if($confidente->tribo_id)
+                                        <span class="text-xs text-orange-600 ml-2">
+                                            <i class="fas fa-info-circle"></i> Já atribuído à {{ $confidente->tribo->nome_tribo ?? 'outra tribo' }}
+                                        </span>
+                                    @endif
+                                </span>
+                            </label>
+                        @empty
+                            <p class="text-sm text-gray-400 italic text-center py-4">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Nenhum confidente cadastrado. Cadastre confidentes primeiro.
+                            </p>
+                        @endforelse
+                    </div>
+                    @if($confidentes->count() === 0)
+                        <p class="text-xs text-yellow-600 mt-2">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            Você precisa cadastrar confidentes antes de criar tribos.
+                        </p>
+                    @endif
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit" class="btn-primary flex-1">
+                        <i class="fas fa-save mr-2"></i>Salvar
+                    </button>
+                    <button type="button" onclick="fecharModalTribo()" class="btn-secondary">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                <!-- Cabeçalho da Modal -->
-                <h2 class="text-2xl font-semibold text-center text-gray-800 mb-4">Conhecidos de <span
-                        id="campistaNome"></span></h2>
+    <!-- Modal Adicionar/Editar Campista -->
+    <div id="modalAdicionarCampista" class="fixed inset-0 hidden z-50 flex items-center justify-center modal-backdrop">
+        <div onclick="fecharModalAdicionarCampista()" class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div id="modalAdicionarCampistaContent" class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative z-10 mx-4">
+            <button onclick="fecharModalAdicionarCampista()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+                </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4" id="modalCampistaTitulo">Adicionar Campista</h2>
+            <form id="formAdicionarCampista" onsubmit="salvarCampista(event)">
+                <input type="hidden" id="campistaId" value="">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+                    <input type="text" id="nomeCampista" required class="input-modern" placeholder="Nome completo">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Gênero</label>
+                    <select id="generoCampista" required class="input-modern">
+                        <option value="">Selecione...</option>
+                        <option value="m">Masculino</option>
+                        <option value="f">Feminino</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Peso (kg)</label>
+                        <input type="number" id="pesoCampista" required step="0.1" class="input-modern" placeholder="70.5">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Altura (cm)</label>
+                        <input type="number" id="alturaCampista" required step="0.1" class="input-modern" placeholder="175.0">
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button type="submit" class="btn-primary flex-1" id="btnSalvarCampista">
+                        <i class="fas fa-save mr-2"></i>Adicionar
+                    </button>
+                    <button type="button" onclick="fecharModalAdicionarCampista()" class="btn-secondary">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-                <!-- Conteúdo da Modal -->
-                <div class="overflow-y-auto max-h-60">
-                    <ul id="listaConhecidos" class="list-disc list-inside text-gray-700 space-y-1">
-                        <!-- Itens de conhecidos serão inseridos aqui -->
+    <!-- Modal Conhecidos -->
+    <div id="modalConhecidos" class="fixed inset-0 hidden z-50 flex items-center justify-center modal-backdrop">
+        <div onclick="fecharModal()" class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div id="modalConhecidosContent" class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative z-10 mx-4">
+            <button onclick="fecharModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+                </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Conhecidos de <span id="campistaNome"></span></h2>
+            <div class="overflow-y-auto max-h-60 mb-4">
+                <ul id="listaConhecidos" class="space-y-2">
+                    <!-- Itens serão inseridos aqui -->
                     </ul>
                 </div>
-
-                <!-- Opção para Adicionar Conhecido -->
-                <div class="mt-4">
-                    <label for="novoConhecidoId" class="block text-gray-700 font-semibold mb-2">Adicionar
-                        Conhecido:</label>
-                    <select id="novoConhecidoId" class="w-full px-3 py-2 border rounded mb-2">
+            <div class="border-t pt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Adicionar Conhecido</label>
+                <select id="novoConhecidoId" class="input-modern mb-3">
                         <option value="">Selecione um Campista...</option>
                         @foreach($campistas as $campista)
                             <option value="{{ $campista->id }}">{{ $campista->nome }}</option>
                         @endforeach
                     </select>
-                    <button onclick="adicionarConhecido()"
-                            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full mt-2">
-                        Adicionar Conhecido
+                <button onclick="adicionarConhecido()" class="btn-primary w-full">
+                    <i class="fas fa-plus mr-2"></i>Adicionar Conhecido
                     </button>
-
                 </div>
-
             </div>
         </div>
 
-
-        <!-- Modal para Ver Confidentes Conhecidos -->
-        <div id="modalConfidentes" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black bg-opacity-30">
-            <div onclick="fecharModalConfidentes()" class="absolute inset-0"></div>
-            <div class="bg-white w-50 max-w-lg p-6 rounded-lg shadow-lg relative z-10 mx-4"
-                 style="box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);">
-
-                <!-- Botão de Fechar -->
-                <button onclick="fecharModalConfidentes()" style="top: 0.5%; right: 2%;" class="absolute text-gray-500 hover:text-gray-800 text-2xl font-bold">
-                    &times;
+    <!-- Modal Confidentes -->
+    <div id="modalConfidentes" class="fixed inset-0 hidden z-50 flex items-center justify-center modal-backdrop">
+        <div onclick="fecharModalConfidentes()" class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div id="modalConfidentesContent" class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative z-10 mx-4">
+            <button onclick="fecharModalConfidentes()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
                 </button>
-
-                <!-- Cabeçalho da Modal -->
-                <h2 class="text-2xl font-semibold text-center text-gray-800 mb-4">Confidentes Conhecidos de <span id="campistaNomeConfidentes"></span></h2>
-
-                <!-- Lista de Confidentes Conhecidos -->
-                <div class="overflow-y-auto max-h-60">
-                    <ul id="listaConfidentes" class="list-disc list-inside text-gray-700 space-y-1">
-                        <!-- Itens de confidentes conhecidos serão inseridos aqui -->
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Confidentes Conhecidos de <span id="campistaNomeConfidentes"></span></h2>
+            <div class="overflow-y-auto max-h-60 mb-4">
+                <ul id="listaConfidentes" class="space-y-2">
+                    <!-- Itens serão inseridos aqui -->
                     </ul>
                 </div>
-
-                <!-- Opção para Adicionar Confidente Conhecido -->
-                <div class="mt-4">
-                    <label for="novoConfidenteId" class="block text-gray-700 font-semibold mb-2">Adicionar Confidente:</label>
-                    <select id="novoConfidenteId" class="w-full px-3 py-2 border rounded mb-2">
+            <div class="border-t pt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Adicionar Confidente</label>
+                <select id="novoConfidenteId" class="input-modern mb-3">
                         <option value="">Selecione um Confidente...</option>
-                        @foreach($campistas as $campista)
-                            <option value="{{ $campista->id }}">{{ $campista->nome }}</option>
+                    @foreach($confidentes as $confidente)
+                        <option value="{{ $confidente->id }}">{{ $confidente->nome }}</option>
                         @endforeach
                     </select>
-                    <button onclick="adicionarConfidente()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full">
-                        Adicionar Confidente
+                <button onclick="adicionarConfidente()" class="btn-primary w-full">
+                    <i class="fas fa-plus mr-2"></i>Adicionar Confidente
                     </button>
                 </div>
             </div>
         </div>
 
-
-
-        <footer class="block py-4">
-            <div class="container mx-auto px-4">
-                <hr class="mb-4 border-b-1 border-blueGray-200"/>
-                <div class="flex items-center md:justify-center justify-center">
-                    <div class="text-sm text-blueGray-500 font-semibold py-1">
-                        Copyright ©
-                        <span id="javascript-date"></span>
-                        <a href="https://www.creative-tim.com"
-                           class="text-blueGray-500 hover:text-blueGray-700 text-sm font-semibold py-1">
-                            MAANAIM
-                        </a>
-                    </div>
-                </div>
+    <!-- Modal Importar CSV -->
+    <div id="modalImportarCSV" class="fixed inset-0 hidden z-50 flex items-center justify-center modal-backdrop">
+        <div onclick="fecharModalImportarCSV()" class="absolute inset-0 bg-black bg-opacity-50"></div>
+        <div id="modalImportarCSVContent" class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative z-10 mx-4">
+            <button onclick="fecharModalImportarCSV()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-file-csv mr-2 text-blue-600"></i>Importar Campistas via CSV
+            </h2>
+            
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded">
+                <p class="text-sm text-blue-700">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <strong>Formato esperado:</strong> O arquivo CSV deve conter as colunas: Nome completo, Sexo, Peso e Altura.
+                </p>
             </div>
-        </footer>
+
+            <form id="formImportarCSV" action="/campistas/importar-csv" method="POST" enctype="multipart/form-data" onsubmit="importarCSV(event)">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-file-upload mr-2"></i>Selecione o arquivo CSV
+                    </label>
+                    <input type="file" 
+                           id="arquivo_csv" 
+                           name="arquivo_csv" 
+                           accept=".csv,.txt"
+                           required
+                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <p class="text-xs text-gray-500 mt-2">
+                        Formatos aceitos: CSV, TXT (máx. 10MB)
+                    </p>
+                    </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <p class="text-xs text-yellow-800">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        <strong>Atenção:</strong> Campistas com o mesmo nome serão atualizados automaticamente.
+                    </p>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="btn-primary flex-1 bg-blue-600 hover:bg-blue-700">
+                        <i class="fas fa-upload mr-2"></i>Importar
+                    </button>
+                    <button type="button" onclick="fecharModalImportarCSV()" class="btn-secondary">
+                        Cancelar
+                    </button>
+            </div>
+            </form>
     </div>
 </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        // Inicializar o Select2
+        // Inicializar Select2
+        $(document).ready(function() {
         $('#novoConhecidoId').select2({
             placeholder: "Selecione um Campista...",
             allowClear: true,
-            width: '100%',
+                width: '100%'
         });
     });
 
-    function abrirListaTribos(campistaId) {
-        // Alterna a visibilidade da lista de tribos para o campista específico
-        const listaTribos = document.getElementById(`tribos-${campistaId}`);
-        if (listaTribos.classList.contains('hidden')) {
-            listaTribos.classList.remove('hidden');
-        } else {
-            listaTribos.classList.add('hidden');
+        // Funções de Loading
+        function mostrarLoading(texto = 'Processando...') {
+            document.getElementById('loadingText').textContent = texto;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
         }
-    }
 
-    function montarTribos() {
-        // Redireciona para o endpoint de montagem de tribos
+        function esconderLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        // Funções de Tribo
+        function abrirModalAdicionarTribo() {
+            document.getElementById('modalTriboTitulo').textContent = 'Adicionar Tribo';
+            document.getElementById('triboId').value = '';
+            document.getElementById('nomeTribo').value = '';
+            
+            // Desmarcar todos os checkboxes
+            document.querySelectorAll('.confidente-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            const modal = document.getElementById('modalTribo');
+            const content = document.getElementById('modalTriboContent');
+            modal.classList.remove('hidden');
+            content.classList.add('modal-enter');
+        }
+
+        function abrirModalEditarTribo(id, nome) {
+            document.getElementById('modalTriboTitulo').textContent = 'Editar Tribo';
+            document.getElementById('triboId').value = id;
+            document.getElementById('nomeTribo').value = nome;
+            
+            // Desmarcar todos os checkboxes primeiro
+            document.querySelectorAll('.confidente-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // Buscar os confidentes da tribo e marcar os checkboxes
+            mostrarLoading('Carregando confidentes da tribo...');
+            fetch(`/tribos`)
+                .then(response => response.json())
+                .then(tribos => {
+                    const tribo = tribos.find(t => t.id == id);
+                    if (tribo && tribo.confidentes) {
+                        tribo.confidentes.forEach(confidente => {
+                            const checkbox = document.querySelector(`input[data-confidente-id="${confidente.id}"]`);
+                            if (checkbox) {
+                                checkbox.checked = true;
+                            }
+                        });
+                    }
+                    esconderLoading();
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar confidentes:', error);
+                    esconderLoading();
+                });
+            
+            const modal = document.getElementById('modalTribo');
+            const content = document.getElementById('modalTriboContent');
+            modal.classList.remove('hidden');
+            content.classList.add('modal-enter');
+        }
+
+        function fecharModalTribo() {
+            const modal = document.getElementById('modalTribo');
+            const content = document.getElementById('modalTriboContent');
+            content.classList.add('modal-exit');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                content.classList.remove('modal-exit', 'modal-enter');
+            }, 300);
+        }
+
+        function salvarTribo(event) {
+            event.preventDefault();
+            const btn = event.target.querySelector('button[type="submit"]');
+            const btnTextOriginal = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+            
+            const id = document.getElementById('triboId').value;
+            const nome = document.getElementById('nomeTribo').value;
+            
+            // Coletar os confidentes selecionados
+            const confidentesSelecionados = [];
+            document.querySelectorAll('.confidente-checkbox:checked').forEach(checkbox => {
+                confidentesSelecionados.push(parseInt(checkbox.value));
+            });
+            
+            const url = id ? `/tribos/editar/${id}` : '/tribos/adicionar';
+            const method = id ? 'PUT' : 'POST';
+
+            mostrarLoading('Salvando tribo...');
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ 
+                    nome_tribo: nome,
+                    confidentes_ids: confidentesSelecionados
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                esconderLoading();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Erro ao salvar tribo.');
+                    btn.disabled = false;
+                    btn.innerHTML = btnTextOriginal;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                esconderLoading();
+                alert('Erro ao salvar tribo.');
+                btn.disabled = false;
+                btn.innerHTML = btnTextOriginal;
+            });
+        }
+
+        function removerTribo(id) {
+            if (!confirm('Tem certeza que deseja excluir esta tribo?')) return;
+            
+            mostrarLoading('Removendo tribo...');
+
+            fetch(`/tribos/remover/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                esconderLoading();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Erro ao remover tribo.');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                esconderLoading();
+                alert('Erro ao remover tribo.');
+            });
+        }
+
+        // Funções existentes (mantidas)
+    function abrirListaTribos(campistaId) {
+            // Fechar outras listas abertas
+            document.querySelectorAll('[id^="tribos-"]').forEach(lista => {
+                if (lista.id !== `tribos-${campistaId}`) {
+                    lista.classList.add('hidden');
+                }
+            });
+            
+        const listaTribos = document.getElementById(`tribos-${campistaId}`);
+            if (listaTribos) {
+                listaTribos.classList.toggle('hidden');
+            }
+        }
+        
+        // Fechar lista de tribos ao clicar fora
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('[id^="tribos-"]') && !event.target.closest('button[onclick*="abrirListaTribos"]')) {
+                document.querySelectorAll('[id^="tribos-"]').forEach(lista => {
+                    lista.classList.add('hidden');
+                });
+            }
+        });
+
+        function montarTribos(event) {
+            if (confirm('Isso irá redistribuir todos os campistas. Deseja continuar?')) {
+                const btn = event ? event.target : document.getElementById('btnMontarTribos');
+                const btnTextOriginal = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processando...';
+                
+                mostrarLoading('Distribuindo campistas nas tribos...');
         window.location.href = '/monta-tribos';
+            }
+        }
+        
+        function confirmarRemoverDaTribo(event, nome) {
+            if (!confirm(`Tem certeza que deseja remover "${nome}" da tribo?`)) {
+                event.preventDefault();
+                return false;
+            }
+            return true;
     }
 
-    function filterTable() {
-        const input = document.getElementById("searchInput").value.toLowerCase();
-        const table = document.getElementById("campistaTable");
-        const rows = table.getElementsByTagName("tr");
+        // Variáveis de paginação
+        let currentPage = 1;
+        let itemsPerPage = 25;
+        let filteredItems = [];
 
-        for (let i = 1; i < rows.length; i++) {
-            // Capture todas as células (colunas) dentro da linha
-            const cells = rows[i].getElementsByTagName("th");
-            let rowContent = "";
+        // Inicializar paginação ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePagination();
+        });
 
+        function initializePagination() {
+            // Coletar todos os itens visíveis
+            updateFilteredItems();
+            // Renderizar primeira página
+            renderPage();
+        }
+
+        function updateFilteredItems() {
+            const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+            const allRows = document.querySelectorAll('.campista-row');
+            const allCards = document.querySelectorAll('.campista-card');
+            
+            filteredItems = [];
+            
+            // Processar linhas da tabela (desktop)
+            allRows.forEach((row, index) => {
+                const cells = row.getElementsByTagName("td");
+                let rowContent = "";
             for (let j = 0; j < cells.length; j++) {
                 rowContent += cells[j].textContent.toLowerCase() + " ";
             }
 
-            // Verifique se a linha inclui o texto do filtro
-            if (rowContent.includes(input)) {
-                rows[i].style.display = "";
-            } else {
-                rows[i].style.display = "none";
+                const isVisible = !searchTerm || rowContent.includes(searchTerm);
+                row.style.display = isVisible ? "" : "none";
+                
+                if (isVisible) {
+                    filteredItems.push({
+                        type: 'row',
+                        element: row,
+                        id: row.getAttribute('data-campista-id')
+                    });
+                }
+            });
+            
+            // Processar cards (mobile)
+            allCards.forEach((card) => {
+                const cardText = card.textContent.toLowerCase();
+                const isVisible = !searchTerm || cardText.includes(searchTerm);
+                card.style.display = isVisible ? "" : "none";
+                
+                if (isVisible) {
+                    // Verificar se já não foi adicionado (pode ter duplicado)
+                    const id = card.getAttribute('data-campista-id');
+                    if (!filteredItems.find(item => item.id === id && item.type === 'card')) {
+                        filteredItems.push({
+                            type: 'card',
+                            element: card,
+                            id: id
+                        });
+                    }
+                }
+            });
+        }
+
+        function renderPage() {
+            const startIndex = itemsPerPage === 'all' ? 0 : (currentPage - 1) * itemsPerPage;
+            const endIndex = itemsPerPage === 'all' ? filteredItems.length : startIndex + itemsPerPage;
+            
+            // Ocultar todos os itens primeiro
+            filteredItems.forEach(item => {
+                if (item.type === 'row') {
+                    item.element.style.display = 'none';
+                } else if (item.type === 'card') {
+                    item.element.style.display = 'none';
+                }
+            });
+            
+            // Mostrar apenas os itens da página atual
+            const itemsToShow = filteredItems.slice(startIndex, endIndex);
+            itemsToShow.forEach(item => {
+                item.element.style.display = '';
+            });
+            
+            // Atualizar controles de paginação
+            updatePaginationControls();
+        }
+
+        function updatePaginationControls() {
+            const totalItems = filteredItems.length;
+            const totalPages = itemsPerPage === 'all' ? 1 : Math.ceil(totalItems / itemsPerPage);
+            
+            // Atualizar informações
+            const startItem = itemsPerPage === 'all' ? 1 : (currentPage - 1) * itemsPerPage + 1;
+            const endItem = itemsPerPage === 'all' ? totalItems : Math.min(currentPage * itemsPerPage, totalItems);
+            
+            document.getElementById('paginationInfo').textContent = 
+                totalItems > 0 
+                    ? `Mostrando ${startItem} a ${endItem} de ${totalItems} campista${totalItems !== 1 ? 's' : ''}`
+                    : 'Nenhum campista encontrado';
+            
+            // Atualizar página atual e total
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('totalPages').textContent = totalPages;
+            
+            // Atualizar botões
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage >= totalPages || itemsPerPage === 'all';
+            
+            // Ocultar controles se não houver itens
+            document.getElementById('paginationControls').style.display = totalItems === 0 ? 'none' : 'flex';
+        }
+
+        function changePage(direction) {
+            const totalPages = itemsPerPage === 'all' ? 1 : Math.ceil(filteredItems.length / itemsPerPage);
+            const newPage = currentPage + direction;
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderPage();
+                // Scroll suave para o topo da tabela
+                document.getElementById('campistaTable')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.getElementById('campistaCardsContainer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
-    }
 
-
-    async function handleCampistaAction(url, action) {
-        const response = await fetch(url, {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}});
-        if (response.ok) {
-            document.location.reload(); // Refresh the list after AJAX update
-        } else {
-            alert("Falha na operação: " + action);
+        function changeItemsPerPage() {
+            const select = document.getElementById('itemsPerPage');
+            itemsPerPage = select.value === 'all' ? 'all' : parseInt(select.value);
+            currentPage = 1; // Resetar para primeira página
+            renderPage();
         }
+
+        function filterTable() {
+            const input = document.getElementById("searchInput").value.toLowerCase();
+            
+            // Atualizar lista de itens filtrados
+            updateFilteredItems();
+            
+            // Resetar para primeira página
+            currentPage = 1;
+            
+            // Renderizar página
+            renderPage();
+        }
+
+        function abrirModalAdicionarCampista() {
+            // Limpar formulário e configurar para adicionar
+            document.getElementById('modalCampistaTitulo').textContent = 'Adicionar Campista';
+            document.getElementById('campistaId').value = '';
+            document.getElementById('nomeCampista').value = '';
+            document.getElementById('generoCampista').value = '';
+            document.getElementById('pesoCampista').value = '';
+            document.getElementById('alturaCampista').value = '';
+            document.getElementById('btnSalvarCampista').innerHTML = '<i class="fas fa-save mr-2"></i>Adicionar';
+            
+            const modal = document.getElementById("modalAdicionarCampista");
+            const content = document.getElementById("modalAdicionarCampistaContent");
+            modal.classList.remove("hidden");
+            content.classList.add('modal-enter');
+        }
+
+        function abrirModalEditarCampista(id, nome, genero, peso, altura) {
+            // Preencher formulário com dados do campista
+            document.getElementById('modalCampistaTitulo').textContent = 'Editar Campista';
+            document.getElementById('campistaId').value = id;
+            document.getElementById('nomeCampista').value = nome;
+            document.getElementById('generoCampista').value = genero;
+            document.getElementById('pesoCampista').value = peso;
+            document.getElementById('alturaCampista').value = altura;
+            document.getElementById('btnSalvarCampista').innerHTML = '<i class="fas fa-save mr-2"></i>Salvar Alterações';
+            
+            const modal = document.getElementById("modalAdicionarCampista");
+            const content = document.getElementById("modalAdicionarCampistaContent");
+            modal.classList.remove("hidden");
+            content.classList.add('modal-enter');
+        }
+
+        function fecharModalAdicionarCampista() {
+            const modal = document.getElementById("modalAdicionarCampista");
+            const content = document.getElementById("modalAdicionarCampistaContent");
+            content.classList.add('modal-exit');
+            setTimeout(() => {
+                modal.classList.add("hidden");
+                content.classList.remove('modal-exit', 'modal-enter');
+                // Limpar formulário
+                document.getElementById('formAdicionarCampista').reset();
+                document.getElementById('campistaId').value = '';
+            }, 300);
+        }
+
+        function salvarCampista(event) {
+            event.preventDefault();
+            const btn = event.target.querySelector('button[type="submit"]');
+            const btnTextOriginal = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+            
+            const id = document.getElementById("campistaId").value;
+            const nome = document.getElementById("nomeCampista").value;
+            const genero = document.getElementById("generoCampista").value;
+            const peso = document.getElementById("pesoCampista").value;
+            const altura = document.getElementById("alturaCampista").value;
+
+            const isEdit = id !== '';
+            const url = isEdit ? `/campistas/editar/${id}` : '/campistas/adicionar';
+            const method = isEdit ? 'PUT' : 'POST';
+            const loadingText = isEdit ? 'Atualizando campista...' : 'Adicionando campista...';
+
+            mostrarLoading(loadingText);
+
+            fetch(url, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({ nome, genero, peso, altura })
+            })
+            .then(response => response.json())
+            .then(data => {
+                esconderLoading();
+                if (data.success) {
+                    location.reload();
+            } else {
+                    alert(data.message || (isEdit ? "Erro ao atualizar campista." : "Erro ao adicionar campista."));
+                    btn.disabled = false;
+                    btn.innerHTML = btnTextOriginal;
+                }
+            })
+            .catch(error => {
+                console.error("Erro:", error);
+                esconderLoading();
+                alert(isEdit ? "Erro ao atualizar campista." : "Erro ao adicionar campista.");
+                btn.disabled = false;
+                btn.innerHTML = btnTextOriginal;
+            });
+        }
+
+        function removerCampista(campistaId, nome, emTribo) {
+            let mensagem = `Tem certeza que deseja excluir "${nome}"?`;
+            if (emTribo) {
+                mensagem += '\n\nAVISO: Este campista está atribuído a uma tribo e será removido dela.';
+            }
+            
+            if (!confirm(mensagem)) return;
+
+            const row = document.getElementById(`row-${campistaId}`) || document.getElementById(`card-${campistaId}`);
+            if (row) {
+                row.style.transition = 'opacity 0.3s';
+                row.style.opacity = '0.5';
+            }
+            
+            mostrarLoading('Removendo campista...');
+
+            fetch(`/campistas/remover/${campistaId}`, {
+                method: "DELETE",
+                headers: {
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                esconderLoading();
+                if (data.success) {
+                    if (row) {
+                        row.style.opacity = '0';
+                        setTimeout(() => location.reload(), 300);
+        } else {
+                        location.reload();
+                    }
+                } else {
+                    alert(data.message || "Erro ao remover campista.");
+                    if (row) {
+                        row.style.opacity = '1';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Erro:", error);
+                esconderLoading();
+                alert("Erro ao remover campista.");
+                if (row) {
+                    row.style.opacity = '1';
+                }
+            });
     }
 
     function abrirModalConhecidos(campistaId, campistaNome) {
-        // Defina o ID e o nome do campista para adicionar/remover conhecidos
         document.getElementById("campistaNome").innerText = campistaNome;
         document.getElementById("modalConhecidos").dataset.campistaId = campistaId;
-
-        // Limpe qualquer conteúdo existente na lista de conhecidos
         const listaConhecidos = document.getElementById("listaConhecidos");
         listaConhecidos.innerHTML = "";
 
-        // Fetch para obter os conhecidos do campista
+            const modal = document.getElementById("modalConhecidos");
+            const content = document.getElementById("modalConhecidosContent");
+            modal.classList.remove("hidden");
+            content.classList.add('modal-enter');
+
+            mostrarLoading('Carregando conhecidos...');
+
         fetch(`/conhecidos/${campistaId}`)
             .then(response => response.json())
             .then(data => {
-                data.conhecidos.forEach(conhecido => {
+                    esconderLoading();
+                    data.conhecidos.forEach((conhecido, index) => {
                     const li = document.createElement("li");
-                    li.classList.add("flex", "justify-between", "items-center");
-                    li.innerText = conhecido.nome;
-
-                    // Botão de Remover ao lado do nome do conhecido
-                    const removeButton = document.createElement("button");
-                    removeButton.innerText = "Remover";
-                    removeButton.className = "bg-red-500 hover:bg-red-700 text-white font-bold text-xs px-2 py-1 rounded ml-4 mt-1";
-                    removeButton.onclick = () => removerConhecido(campistaId, conhecido.id, li);
-
-                    li.appendChild(removeButton);
+                        li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
+                        li.style.animationDelay = `${index * 0.05}s`;
+                        li.innerHTML = `
+                            <span class="text-gray-700">${conhecido.nome}</span>
+                            <button onclick="removerConhecido(${campistaId}, ${conhecido.id}, this.parentElement)" 
+                                    class="text-red-500 hover:text-red-700 transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
                     listaConhecidos.appendChild(li);
                 });
             })
-            .catch(error => console.error('Erro ao carregar conhecidos:', error));
-
-        // Exibe a modal
-        document.getElementById("modalConhecidos").classList.remove("hidden");
+                .catch(error => {
+                    console.error('Erro:', error);
+                    esconderLoading();
+                });
     }
 
     function fecharModal() {
-        document.getElementById("modalConhecidos").classList.add("hidden");
+            const modal = document.getElementById("modalConhecidos");
+            const content = document.getElementById("modalConhecidosContent");
+            content.classList.add('modal-exit');
+            setTimeout(() => {
+                modal.classList.add("hidden");
+                content.classList.remove('modal-exit', 'modal-enter');
+            }, 300);
     }
 
     function adicionarConhecido() {
         const campistaId = document.getElementById("modalConhecidos").dataset.campistaId;
-        const novoConhecidoId = document.getElementById("novoConhecidoId").value; // Pega o valor do select
+            const novoConhecidoId = document.getElementById("novoConhecidoId").value;
+            
+            if (!novoConhecidoId) {
+                alert('Por favor, selecione um campista.');
+                return;
+            }
+
+            const btn = event.target;
+            const btnTextOriginal = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adicionando...';
+
+            mostrarLoading('Adicionando conhecido...');
 
         fetch(`/conhecidos/adicionar`, {
             method: "POST",
@@ -525,18 +1628,30 @@
         })
             .then(response => response.json())
             .then(data => {
+                esconderLoading();
                 if (data.success) {
-                    abrirModalConhecidos(campistaId, document.getElementById("campistaNome").innerText); // Recarregar a lista
-                    $('#novoConhecidoId').val(null).trigger('change'); // Limpar o select após adicionar
+                    const campistaNome = document.getElementById("campistaNome").innerText;
+                    abrirModalConhecidos(campistaId, campistaNome);
+                    $('#novoConhecidoId').val(null).trigger('change');
                 } else {
                     alert(data.message || "Erro ao adicionar conhecido.");
+                    btn.disabled = false;
+                    btn.innerHTML = btnTextOriginal;
                 }
             })
-            .catch(error => console.error("Erro ao adicionar conhecido:", error));
-    }
-
+            .catch(error => {
+                console.error("Erro:", error);
+                esconderLoading();
+                alert("Erro ao adicionar conhecido.");
+                btn.disabled = false;
+                btn.innerHTML = btnTextOriginal;
+            });
+        }
 
     function removerConhecido(campistaId, conhecidoId, liElement) {
+            liElement.style.opacity = '0.5';
+            mostrarLoading('Removendo conhecido...');
+
         fetch(`/conhecidos/remover`, {
             method: "POST",
             headers: {
@@ -547,72 +1662,152 @@
         })
             .then(response => response.json())
             .then(data => {
+                esconderLoading();
                 if (data.success) {
-                    liElement.remove(); // Remove o elemento da lista
+                    liElement.style.transition = 'opacity 0.3s, transform 0.3s';
+                    liElement.style.opacity = '0';
+                    liElement.style.transform = 'translateX(-20px)';
+                    setTimeout(() => liElement.remove(), 300);
                 } else {
                     alert(data.message || "Erro ao remover conhecido.");
+                    liElement.style.opacity = '1';
                 }
             })
-            .catch(error => console.error("Erro ao remover conhecido:", error));
+            .catch(error => {
+                console.error("Erro:", error);
+                esconderLoading();
+                alert("Erro ao remover conhecido.");
+                liElement.style.opacity = '1';
+            });
     }
 
     function abrirModalConfidentes(campistaId, campistaNome) {
-        // Defina o ID e o nome do campista para adicionar/remover confidentes
         document.getElementById("campistaNomeConfidentes").innerText = campistaNome;
         document.getElementById("modalConfidentes").dataset.campistaId = campistaId;
-
-        // Limpe qualquer conteúdo existente na lista de confidentes conhecidos
         const listaConfidentes = document.getElementById("listaConfidentes");
         listaConfidentes.innerHTML = "";
 
-        // Fetch para obter os confidentes conhecidos do campista
+            const modal = document.getElementById("modalConfidentes");
+            const content = document.getElementById("modalConfidentesContent");
+            modal.classList.remove("hidden");
+            content.classList.add('modal-enter');
+
+            mostrarLoading('Carregando confidentes...');
+
         fetch(`/confidentes/${campistaId}`)
             .then(response => response.json())
             .then(data => {
-                data.confidentes.forEach(confidente => {
+                    esconderLoading();
+                    data.confidentes.forEach((confidente, index) => {
                     const li = document.createElement("li");
-                    li.classList.add("flex", "justify-between", "items-center");
-                    li.innerText = confidente.nome;
-
-                    // Botão de Remover ao lado do nome do confidente
-                    const removeButton = document.createElement("button");
-                    removeButton.innerText = "Remover";
-                    removeButton.className = "bg-red-500 hover:bg-red-700 text-white font-bold text-xs px-2 py-1 rounded ml-4";
-                    removeButton.onclick = () => removerConfidente(campistaId, confidente.id, li);
-
-                    li.appendChild(removeButton);
+                        li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
+                        li.style.animationDelay = `${index * 0.05}s`;
+                        li.innerHTML = `
+                            <span class="text-gray-700">${confidente.nome}</span>
+                            <button onclick="removerConfidente(${campistaId}, ${confidente.id}, this.parentElement)" 
+                                    class="text-red-500 hover:text-red-700 transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
                     listaConfidentes.appendChild(li);
                 });
             })
-            .catch(error => console.error('Erro ao carregar confidentes conhecidos:', error));
-
-        // Obtenha a lista de confidentes para o seletor de "Adicionar Confidente"
-        fetch(`/confidentes`)
-            .then(response => response.json())
-            .then(confidentes => {
-                const selectConfidentes = document.getElementById("novoConfidenteId");
-                selectConfidentes.innerHTML = '<option value="">Selecione um Confidente...</option>';
-
-                confidentes.forEach(confidente => {
-                    const option = document.createElement("option");
-                    option.value = confidente.id;
-                    option.innerText = confidente.nome;
-                    selectConfidentes.appendChild(option);
+                .catch(error => {
+                    console.error('Erro:', error);
+                    esconderLoading();
                 });
-            })
-            .catch(error => console.error('Erro ao carregar lista de confidentes:', error));
-
-        // Exibe a modal
-        document.getElementById("modalConfidentes").classList.remove("hidden");
     }
 
     function fecharModalConfidentes() {
-        document.getElementById("modalConfidentes").classList.add("hidden");
-    }
+            const modal = document.getElementById("modalConfidentes");
+            const content = document.getElementById("modalConfidentesContent");
+            content.classList.add('modal-exit');
+            setTimeout(() => {
+                modal.classList.add("hidden");
+                content.classList.remove('modal-exit', 'modal-enter');
+            }, 300);
+        }
+
+        // Funções de Importação CSV
+        function abrirModalImportarCSV() {
+            const modal = document.getElementById("modalImportarCSV");
+            const content = document.getElementById("modalImportarCSVContent");
+            modal.classList.remove("hidden");
+            content.classList.add('modal-enter');
+        }
+
+        function fecharModalImportarCSV() {
+            const modal = document.getElementById("modalImportarCSV");
+            const content = document.getElementById("modalImportarCSVContent");
+            content.classList.add('modal-exit');
+            setTimeout(() => {
+                modal.classList.add("hidden");
+                content.classList.remove('modal-exit', 'modal-enter');
+                // Limpar formulário
+                document.getElementById("formImportarCSV").reset();
+            }, 300);
+        }
+
+        function importarCSV(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const btn = form.querySelector('button[type="submit"]');
+            const btnTextOriginal = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Importando...';
+            
+            mostrarLoading('Importando campistas do CSV...');
+
+            fetch('/campistas/importar-csv', {
+                method: 'POST',
+            headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                esconderLoading();
+                if (data && !data.success) {
+                    alert(data.message || 'Erro ao importar CSV.');
+                    btn.disabled = false;
+                    btn.innerHTML = btnTextOriginal;
+                }
+                // Se houver redirect, a página será recarregada automaticamente
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                esconderLoading();
+                alert('Erro ao importar CSV.');
+                btn.disabled = false;
+                btn.innerHTML = btnTextOriginal;
+            });
+        }
 
     function adicionarConfidente() {
         const campistaId = document.getElementById("modalConfidentes").dataset.campistaId;
         const novoConfidenteId = document.getElementById("novoConfidenteId").value;
+            
+            if (!novoConfidenteId) {
+                alert('Por favor, selecione um confidente.');
+                return;
+            }
+
+            const btn = event.target;
+            const btnTextOriginal = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adicionando...';
+
+            mostrarLoading('Adicionando confidente...');
 
         fetch(`/confidentes/adicionar`, {
             method: "POST",
@@ -624,17 +1819,30 @@
         })
             .then(response => response.json())
             .then(data => {
+                esconderLoading();
                 if (data.success) {
-                    abrirModalConfidentes(campistaId, document.getElementById("campistaNomeConfidentes").innerText); // Recarregar a lista
-                    document.getElementById("novoConfidenteId").value = ""; // Limpar o campo de seleção após adicionar
+                    const campistaNome = document.getElementById("campistaNomeConfidentes").innerText;
+                    abrirModalConfidentes(campistaId, campistaNome);
+                    document.getElementById("novoConfidenteId").value = "";
                 } else {
                     alert(data.message || "Erro ao adicionar confidente.");
+                    btn.disabled = false;
+                    btn.innerHTML = btnTextOriginal;
                 }
             })
-            .catch(error => console.error("Erro ao adicionar confidente:", error));
+            .catch(error => {
+                console.error("Erro:", error);
+                esconderLoading();
+                alert("Erro ao adicionar confidente.");
+                btn.disabled = false;
+                btn.innerHTML = btnTextOriginal;
+            });
     }
 
     function removerConfidente(campistaId, confidenteId, liElement) {
+            liElement.style.opacity = '0.5';
+            mostrarLoading('Removendo confidente...');
+
         fetch(`/confidentes/remover`, {
             method: "POST",
             headers: {
@@ -645,85 +1853,24 @@
         })
             .then(response => response.json())
             .then(data => {
+                esconderLoading();
                 if (data.success) {
-                    liElement.remove(); // Remove o elemento da lista
+                    liElement.style.transition = 'opacity 0.3s, transform 0.3s';
+                    liElement.style.opacity = '0';
+                    liElement.style.transform = 'translateX(-20px)';
+                    setTimeout(() => liElement.remove(), 300);
                 } else {
                     alert(data.message || "Erro ao remover confidente.");
+                    liElement.style.opacity = '1';
                 }
             })
-            .catch(error => console.error("Erro ao remover confidente:", error));
-    }
-
-
-    // Função para abrir a modal de adicionar campista
-    function abrirModalAdicionarCampista() {
-        document.getElementById("modalAdicionarCampista").classList.remove("hidden");
-    }
-
-    // Função para fechar a modal de adicionar campista
-    function fecharModalAdicionarCampista() {
-        document.getElementById("modalAdicionarCampista").classList.add("hidden");
-    }
-
-    // Função para adicionar um novo campista
-    function adicionarCampista(event) {
-        event.preventDefault();
-
-        const nome = document.getElementById("nomeCampista").value;
-        const genero = document.getElementById("generoCampista").value;
-        const peso = document.getElementById("pesoCampista").value;
-        const altura = document.getElementById("alturaCampista").value;
-
-        fetch(`/campistas/adicionar`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify({ nome, genero, peso, altura })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Campista adicionado com sucesso!");
-                    fecharModalAdicionarCampista();
-                    document.location.reload(); // Atualiza a lista de campistas
-                } else {
-                    alert(data.message || "Erro ao adicionar campista.");
-                }
-            })
-            .catch(error => console.error("Erro ao adicionar campista:", error));
-    }
-
-    // Função para remover um campista
-    function removerCampista(campistaId) {
-        if (!confirm("Tem certeza que deseja excluir este campista?")) return;
-
-        fetch(`/campistas/remover/${campistaId}`, {
-            method: "DELETE",
-            headers: {
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert("Campista removido com sucesso!");
-                    document.location.reload(); // Atualiza a lista de campistas
-                } else {
-                    alert(data.message || "Erro ao remover campista.");
-                }
-            })
-            .catch(error => console.error("Erro ao remover campista:", error));
-    }
-
+            .catch(error => {
+                console.error("Erro:", error);
+                esconderLoading();
+                alert("Erro ao remover confidente.");
+                liElement.style.opacity = '1';
+            });
+        }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" charset="utf-8"></script>
-<script src="https://unpkg.com/@popperjs/core@2.9.1/dist/umd/popper.min.js" charset="utf-8"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
-
 </body>
 </html>

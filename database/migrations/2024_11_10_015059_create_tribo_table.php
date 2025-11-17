@@ -17,6 +17,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // Adicionar coluna tribo_id nas tabelas existentes
         Schema::table('confidentes', function (Blueprint $table) {
             $table->foreignIdFor(\App\Models\Tribo::class)->nullable();
         });

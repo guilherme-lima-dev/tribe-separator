@@ -1,0 +1,20 @@
+services:
+  tribe-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tribe-manager
+    working_dir: /var/www/html
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - laravel
+    stdin_open: true
+    tty: true
+    command: tail -f /dev/null
+
+networks:
+  laravel:
+    driver: bridge

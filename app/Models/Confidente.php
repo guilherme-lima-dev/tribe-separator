@@ -11,7 +11,8 @@ class Confidente extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'nome'
+        'nome',
+        'tribo_id'
     ];
 
     public function campistas()
@@ -26,6 +27,6 @@ class Confidente extends Model
 
     public function tribo()
     {
-        return $this->belongsTo(Tribo::class, 'id_tribo');
+        return $this->belongsTo(Tribo::class, 'tribo_id');
     }
 }
