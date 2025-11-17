@@ -3,13 +3,20 @@ FROM node:20-alpine AS node-builder
 
 WORKDIR /app
 
+# Copiar arquivos de dependências primeiro
 COPY package*.json ./
 RUN npm ci
 
-COPY vite.config.js tailwind.config.js postcss.config.js ./
+# Copiar arquivos de configuração
+COPY vite.config.js ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
+
+# Copiar recursos e assets
 COPY resources ./resources
 COPY public ./public
 
+# Build dos assets
 RUN npm run build
 
 # Stage 2: Aplicação PHP
