@@ -84,10 +84,6 @@ echo "====================================="\n\
 rm -f bootstrap/cache/config.php\n\
 rm -f bootstrap/cache/routes-v7.php\n\
 rm -f bootstrap/cache/*.php\n\
-php artisan config:clear\n\
-php artisan cache:clear\n\
-php artisan view:clear\n\
-php artisan route:clear\n\
 # Executar migrações\n\
 php artisan migrate --force --no-interaction || true\n\
 # Recriar caches com as variáveis de ambiente corretas (agora disponíveis em runtime)\n\
