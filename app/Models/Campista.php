@@ -47,11 +47,15 @@ class Campista extends Model
     public function retornaInfracaoNessaTribo($idTribo): ?string
     {
         $msg = null;
-        // Obter a tribo especificada
-        $tribo = Tribo::find($idTribo);
+        // Obter a tribo especificada e recarregar relacionamentos
+        $tribo = Tribo::with('campistas')->find($idTribo);
         if (!$tribo) {
             $msg .= "Não existe essa tribo  | "; // Se a tribo não existir, retorna uma mensagem de erro
+            return $msg;
         }
+
+        // Recarregar relacionamentos do campista atual
+        $this->load(['confidentesConhecidos', 'conhecidos']);
 
         if ($tribo->campistas->count() >= 13) {
             $msg .= "A tribo está cheia | "; // Se a tribo já estiver cheia, retorna uma mensagem de erro
@@ -66,9 +70,11 @@ class Campista extends Model
 
         $nomesCampistas = null;
         // Verificar se o campista conhece algum outro campista já na tribo ou é conhecido por algum campista
+        // Recarregar relacionamentos dos campistas na tribo
+        $tribo->load('campistas.conhecidos');
         foreach ($tribo->campistas as $campistaNaTribo) {
             // Verifica bidirecionalmente se o campista e o outro campista se conhecem
-
+            $campistaNaTribo->load('conhecidos');
             if (
                 $this->conhecidos->contains($campistaNaTribo) ||
                 $campistaNaTribo->conhecidos->contains($this)

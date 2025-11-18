@@ -108,8 +108,10 @@ class CampistaController extends Controller
      * Calcula score de balanceamento simulando a adição do campista à tribo
      * Quanto menor o score, melhor o balanceamento
      */
-    private function calcularScoreBalanceamento($campista, $tribo, $mediasGlobais)
+    private function calcularScoreBalanceamento($campista, $tribo, $mediasGlobais, $totalTribos)
     {
+        // Recarregar relacionamento para ter dados atualizados
+        $tribo->load('campistas');
         $campistasAtuais = $tribo->campistas;
         $totalAtual = $campistasAtuais->count();
         
@@ -117,9 +119,13 @@ class CampistaController extends Controller
         if ($totalAtual === 0) {
             $pesoMedioAtual = 0;
             $alturaMediaAtual = 0;
+            $homensAtual = 0;
+            $mulheresAtual = 0;
         } else {
             $pesoMedioAtual = $campistasAtuais->avg('peso');
             $alturaMediaAtual = $campistasAtuais->avg('altura');
+            $homensAtual = $campistasAtuais->where('genero', 'm')->count();
+            $mulheresAtual = $campistasAtuais->where('genero', 'f')->count();
         }
         
         // SIMULAR nova média SE adicionar este campista
@@ -127,9 +133,23 @@ class CampistaController extends Controller
         $novoPesoMedio = (($pesoMedioAtual * $totalAtual) + $campista->peso) / ($totalAtual + 1);
         $novaAlturaMedia = (($alturaMediaAtual * $totalAtual) + $campista->altura) / ($totalAtual + 1);
         
+        // Simular nova proporção de gênero
+        $novosHomens = $homensAtual + ($campista->genero === 'm' ? 1 : 0);
+        $novasMulheres = $mulheresAtual + ($campista->genero === 'f' ? 1 : 0);
+        $novoTotal = $totalAtual + 1;
+        $proporcaoHomens = $novoTotal > 0 ? ($novosHomens / $novoTotal) : 0;
+        $proporcaoMulheres = $novoTotal > 0 ? ($novasMulheres / $novoTotal) : 0;
+        
+        // Proporção ideal (baseada nas médias globais)
+        $proporcaoHomensIdeal = $mediasGlobais['proporcaoGenero']['total'] > 0
+            ? ($mediasGlobais['proporcaoGenero']['m'] / $mediasGlobais['proporcaoGenero']['total'])
+            : 0.5;
+        $proporcaoMulheresIdeal = 1 - $proporcaoHomensIdeal;
+        
         // Calcular desvio da média global (quanto menor, melhor)
         $desvioPeso = abs($novoPesoMedio - $mediasGlobais['peso']);
         $desvioAltura = abs($novaAlturaMedia - $mediasGlobais['altura']);
+        $desvioGenero = abs($proporcaoHomens - $proporcaoHomensIdeal);
         
         // Calcular desvio percentual
         $desvioPercentualPeso = $mediasGlobais['peso'] > 0 
@@ -138,17 +158,27 @@ class CampistaController extends Controller
         $desvioPercentualAltura = $mediasGlobais['altura'] > 0 
             ? ($desvioAltura / $mediasGlobais['altura']) * 100 
             : 0;
+        $desvioPercentualGenero = $desvioGenero * 100; // Já é uma proporção (0-1)
         
-        // Score: soma dos desvios percentuais (altura pesa menos)
-        // Peso tem peso 1, altura tem peso 0.5
-        return $desvioPercentualPeso + ($desvioPercentualAltura * 0.5);
+        // Fator de distribuição uniforme: penalizar tribos muito cheias ou muito vazias
+        // Ideal: 11-13 campistas por tribo
+        $campistasIdeal = 12; // Meio termo entre 11 e 13
+        $desvioTamanho = abs($novoTotal - $campistasIdeal);
+        $penalidadeTamanho = $desvioTamanho * 2; // Penalidade por estar longe do ideal
+        
+        // Score: soma dos desvios percentuais com pesos
+        // Peso: 1.0, Altura: 0.5, Gênero: 1.5 (importante), Tamanho: 1.0
+        return $desvioPercentualPeso 
+            + ($desvioPercentualAltura * 0.5) 
+            + ($desvioPercentualGenero * 1.5)
+            + $penalidadeTamanho;
     }
 
     private function distribuirCampistasNasTribos($campistas, $tribos)
     {
         // 1. LIMPAR todas as tribos antes de redistribuir
         Campista::query()->update(['tribo_id' => null]);
-        
+
         // 2. Calcular médias globais
         $mediasGlobais = $this->calcularMediasGlobais($campistas);
         
@@ -161,6 +191,7 @@ class CampistaController extends Controller
         $alocados = 0;
         $naoAlocados = 0;
         $campistasNaoAlocados = [];
+        $totalTribos = $tribos->count();
         
         // 4. Distribuir cada campista
         foreach ($campistasOrdenados as $campista) {
@@ -168,8 +199,17 @@ class CampistaController extends Controller
             $menorScore = PHP_FLOAT_MAX;
             $motivoNaoAlocado = null;
             
+            // Recarregar todas as tribos para ter dados atualizados
+            $tribos->each(function($t) {
+                $t->load('campistas');
+            });
+            
             // Encontrar melhor tribo entre as válidas
             foreach ($tribos as $tribo) {
+                // Recarregar relacionamento para ter contagem atualizada
+                $tribo->load('campistas');
+                $totalNaTribo = $tribo->campistas->count();
+                
                 // VALIDAR REGRAS SOCIAIS PRIMEIRO (prioridade absoluta)
                 $infracao = $campista->retornaInfracaoNessaTribo($tribo->id);
                 if (!is_null($infracao)) {
@@ -181,12 +221,12 @@ class CampistaController extends Controller
                 }
                 
                 // Verificar limite de 13 campistas
-                if ($tribo->campistas()->count() >= 13) {
+                if ($totalNaTribo >= 13) {
                     continue; // Tribo cheia
                 }
                 
                 // Calcular score de balanceamento
-                $score = $this->calcularScoreBalanceamento($campista, $tribo, $mediasGlobais);
+                $score = $this->calcularScoreBalanceamento($campista, $tribo, $mediasGlobais, $totalTribos);
                 
                 // Escolher tribo com menor score (melhor balanceamento)
                 if ($score < $menorScore) {
@@ -199,6 +239,10 @@ class CampistaController extends Controller
             if ($melhorTribo) {
                 $campista->tribo_id = $melhorTribo->id;
                 $campista->save();
+                
+                // Recarregar relacionamento da tribo após adicionar
+                $melhorTribo->load('campistas');
+                
                 $alocados++;
             } else {
                 // Campista não pôde ser alocado
@@ -513,11 +557,11 @@ class CampistaController extends Controller
                     if ($campistaExistente) {
                         // Atualizar campista existente
                         try {
-                            $campistaExistente->genero = $genero;
-                            $campistaExistente->peso = $pesoLimpo;
-                            $campistaExistente->altura = $alturaLimpa;
-                            $campistaExistente->save();
-                            $sucessos++;
+                        $campistaExistente->genero = $genero;
+                        $campistaExistente->peso = $pesoLimpo;
+                        $campistaExistente->altura = $alturaLimpa;
+                        $campistaExistente->save();
+                        $sucessos++;
                         } catch (\Exception $e) {
                             $erros++;
                             $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro ao atualizar: " . $e->getMessage();
@@ -525,13 +569,13 @@ class CampistaController extends Controller
                     } else {
                         // Criar novo campista
                         try {
-                            Campista::create([
-                                'nome' => $nome,
-                                'genero' => $genero,
-                                'peso' => $pesoLimpo,
-                                'altura' => $alturaLimpa
-                            ]);
-                            $sucessos++;
+                        Campista::create([
+                            'nome' => $nome,
+                            'genero' => $genero,
+                            'peso' => $pesoLimpo,
+                            'altura' => $alturaLimpa
+                        ]);
+                        $sucessos++;
                         } catch (\Exception $e) {
                             $erros++;
                             $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro ao criar: " . $e->getMessage();
@@ -554,7 +598,7 @@ class CampistaController extends Controller
         
         $totalLinhasArquivo = $numeroLinha; // Último número de linha processado
         $totalEsperado = $totalLinhasArquivo - 1; // Menos o cabeçalho
-        
+
         $mensagem = "Importação concluída! {$sucessos} campista(s) importado(s) com sucesso.";
         if ($erros > 0) {
             $mensagem .= " {$erros} erro(s) encontrado(s).";
