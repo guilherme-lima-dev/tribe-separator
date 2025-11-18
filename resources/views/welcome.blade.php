@@ -756,6 +756,12 @@
                     <input type="text" id="searchInput" onkeyup="filterTable()"
                            placeholder="Buscar campistas..."
                            class="input-modern w-full sm:w-64">
+                    <button id="filterSemTribo" onclick="toggleFilterSemTribo()" 
+                            class="px-4 py-2 rounded-lg border-2 transition-colors text-sm font-medium whitespace-nowrap
+                                   border-yellow-500 bg-yellow-50 text-yellow-700 hover:bg-yellow-100">
+                        <i class="fas fa-filter mr-2"></i>
+                        <span id="filterSemTriboText">Sem Tribo</span>
+                    </button>
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-gray-600 whitespace-nowrap">Itens por página:</label>
                         <select id="itemsPerPage" onchange="changeItemsPerPage()" class="input-modern w-24 text-sm">
@@ -788,7 +794,7 @@
                                 $estaValido = $campista->campistaAtendeARegra();
                                 $motivoInvalidade = $campista->retornaMotivoInvalidade();
                             @endphp
-                            <tr id="row-{{ $campista->id }}" class="campista-row {{ $estaValido ? '' : 'bg-red-50 border-l-4 border-red-500' }} hover:bg-gray-50 transition-colors" data-campista-id="{{ $campista->id }}">
+                            <tr id="row-{{ $campista->id }}" class="campista-row {{ $estaValido ? '' : 'bg-red-50 border-l-4 border-red-500' }} hover:bg-gray-50 transition-colors" data-campista-id="{{ $campista->id }}" data-sem-tribo="{{ empty($campista->tribo_id) ? 'true' : 'false' }}">
                                 <td class="px-4 py-3 text-sm text-gray-700">{{ $campista->id }}</td>
                                 <td class="px-4 py-3 text-sm font-medium text-gray-900">
                                     <div class="flex items-center gap-2">
@@ -909,7 +915,7 @@
                         $estaValido = $campista->campistaAtendeARegra();
                         $motivoInvalidade = $campista->retornaMotivoInvalidade();
                     @endphp
-                    <div id="card-{{ $campista->id }}" class="campista-card bg-white rounded-lg shadow p-4 {{ $estaValido ? '' : 'border-l-4 border-red-500 bg-red-50' }}" data-campista-id="{{ $campista->id }}">
+                    <div id="card-{{ $campista->id }}" class="campista-card bg-white rounded-lg shadow p-4 {{ $estaValido ? '' : 'border-l-4 border-red-500 bg-red-50' }}" data-campista-id="{{ $campista->id }}" data-sem-tribo="{{ empty($campista->tribo_id) ? 'true' : 'false' }}">
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex-1">
                                 <div class="flex items-center gap-2 mb-1">
@@ -1520,6 +1526,7 @@
         let currentPage = 1;
         let itemsPerPage = 25;
         let filteredItems = [];
+        let filterSemTribo = false;
 
         // Funções para gerenciar parâmetros da URL
         function getUrlParams() {
@@ -1527,18 +1534,20 @@
             return {
                 page: parseInt(params.get('page')) || 1,
                 perPage: params.get('perPage') || '25',
-                search: params.get('search') || ''
+                search: params.get('search') || '',
+                semTribo: params.get('semTribo') === 'true'
             };
         }
 
-        function updateUrlParams(page, perPage, search = '') {
+        function updateUrlParams(page, perPage, search = '', semTribo = false) {
             const params = new URLSearchParams();
             if (page > 1) params.set('page', page);
             if (perPage !== '25') params.set('perPage', perPage);
             if (search) params.set('search', search);
+            if (semTribo) params.set('semTribo', 'true');
             
             const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-            window.history.pushState({ page, perPage, search }, '', newUrl);
+            window.history.pushState({ page, perPage, search, semTribo }, '', newUrl);
         }
 
         // Inicializar paginação ao carregar a página
@@ -1551,12 +1560,16 @@
             if (event.state) {
                 currentPage = event.state.page || 1;
                 itemsPerPage = event.state.perPage === 'all' ? 'all' : parseInt(event.state.perPage) || 25;
+                filterSemTribo = event.state.semTribo || false;
                 
                 // Restaurar busca
                 const searchInput = document.getElementById("searchInput");
                 if (searchInput) {
                     searchInput.value = event.state.search || '';
                 }
+                
+                // Restaurar filtro sem tribo
+                updateFilterSemTriboButton();
                 
                 // Restaurar select
                 const select = document.getElementById('itemsPerPage');
@@ -1572,11 +1585,15 @@
                 const urlParams = getUrlParams();
                 currentPage = urlParams.page;
                 itemsPerPage = urlParams.perPage === 'all' ? 'all' : parseInt(urlParams.perPage);
+                filterSemTribo = urlParams.semTribo || false;
                 
                 const searchInput = document.getElementById("searchInput");
                 if (searchInput) {
                     searchInput.value = urlParams.search;
                 }
+                
+                // Restaurar filtro sem tribo
+                updateFilterSemTriboButton();
                 
                 const select = document.getElementById('itemsPerPage');
                 if (select) {
@@ -1593,6 +1610,7 @@
             const urlParams = getUrlParams();
             currentPage = urlParams.page;
             itemsPerPage = urlParams.perPage === 'all' ? 'all' : parseInt(urlParams.perPage);
+            filterSemTribo = urlParams.semTribo || false;
             
             // Restaurar busca se houver
             if (urlParams.search) {
@@ -1601,6 +1619,9 @@
                     searchInput.value = urlParams.search;
                 }
             }
+            
+            // Restaurar filtro sem tribo
+            updateFilterSemTriboButton();
             
             // Restaurar select de itens por página
             const select = document.getElementById('itemsPerPage');
@@ -1629,7 +1650,14 @@
                 rowContent += cells[j].textContent.toLowerCase() + " ";
             }
 
-                const isVisible = !searchTerm || rowContent.includes(searchTerm);
+                // Verificar filtro de busca
+                const matchesSearch = !searchTerm || rowContent.includes(searchTerm);
+                
+                // Verificar filtro sem tribo
+                const semTribo = row.getAttribute('data-sem-tribo') === 'true';
+                const matchesFilterSemTribo = !filterSemTribo || semTribo;
+                
+                const isVisible = matchesSearch && matchesFilterSemTribo;
                 row.style.display = isVisible ? "" : "none";
                 
                 if (isVisible) {
@@ -1644,7 +1672,15 @@
             // Processar cards (mobile)
             allCards.forEach((card) => {
                 const cardText = card.textContent.toLowerCase();
-                const isVisible = !searchTerm || cardText.includes(searchTerm);
+                
+                // Verificar filtro de busca
+                const matchesSearch = !searchTerm || cardText.includes(searchTerm);
+                
+                // Verificar filtro sem tribo
+                const semTribo = card.getAttribute('data-sem-tribo') === 'true';
+                const matchesFilterSemTribo = !filterSemTribo || semTribo;
+                
+                const isVisible = matchesSearch && matchesFilterSemTribo;
                 card.style.display = isVisible ? "" : "none";
                 
                 if (isVisible) {
@@ -1709,6 +1745,39 @@
             document.getElementById('paginationControls').style.display = totalItems === 0 ? 'none' : 'flex';
         }
 
+        function toggleFilterSemTribo() {
+            filterSemTribo = !filterSemTribo;
+            updateFilterSemTriboButton();
+            
+            // Atualizar lista de itens filtrados
+            updateFilteredItems();
+            
+            // Resetar para primeira página
+            currentPage = 1;
+            
+            // Atualizar URL
+            const searchTerm = document.getElementById("searchInput")?.value || '';
+            updateUrlParams(currentPage, itemsPerPage, searchTerm, filterSemTribo);
+            
+            // Renderizar página
+            renderPage();
+        }
+
+        function updateFilterSemTriboButton() {
+            const btn = document.getElementById('filterSemTribo');
+            const text = document.getElementById('filterSemTriboText');
+            
+            if (btn && text) {
+                if (filterSemTribo) {
+                    btn.className = 'px-4 py-2 rounded-lg border-2 transition-colors text-sm font-medium whitespace-nowrap border-yellow-600 bg-yellow-500 text-white hover:bg-yellow-600';
+                    text.textContent = 'Sem Tribo ✓';
+                } else {
+                    btn.className = 'px-4 py-2 rounded-lg border-2 transition-colors text-sm font-medium whitespace-nowrap border-yellow-500 bg-yellow-50 text-yellow-700 hover:bg-yellow-100';
+                    text.textContent = 'Sem Tribo';
+                }
+            }
+        }
+
         function changePage(direction) {
             const totalPages = itemsPerPage === 'all' ? 1 : Math.ceil(filteredItems.length / itemsPerPage);
             const newPage = currentPage + direction;
@@ -1719,7 +1788,7 @@
                 
                 // Atualizar URL
                 const searchTerm = document.getElementById("searchInput")?.value || '';
-                updateUrlParams(currentPage, itemsPerPage, searchTerm);
+                updateUrlParams(currentPage, itemsPerPage, searchTerm, filterSemTribo);
                 
                 // Scroll suave para o topo da tabela
                 document.getElementById('campistaTable')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1735,7 +1804,7 @@
             
             // Atualizar URL
             const searchTerm = document.getElementById("searchInput")?.value || '';
-            updateUrlParams(currentPage, itemsPerPage, searchTerm);
+            updateUrlParams(currentPage, itemsPerPage, searchTerm, filterSemTribo);
         }
 
         function filterTable() {
@@ -1749,7 +1818,7 @@
             currentPage = 1;
             
             // Atualizar URL
-            updateUrlParams(currentPage, itemsPerPage, input.value);
+            updateUrlParams(currentPage, itemsPerPage, input.value, filterSemTribo);
             
             // Renderizar página
             renderPage();
