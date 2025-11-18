@@ -882,15 +882,15 @@
                                                 class="text-green-500 hover:text-green-700 transition-colors" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button onclick="abrirModalConhecidos({{ $campista->id }}, '{{ $campista->nome }}')" 
+                                        <button onclick="abrirModalConhecidos({{ $campista->id }}, {{ json_encode($campista->nome) }})" 
                                                 class="text-blue-500 hover:text-blue-700 transition-colors" title="Conhecidos">
                                             <i class="fas fa-user-friends"></i>
                                         </button>
-                                        <button onclick="abrirModalConfidentes({{ $campista->id }}, '{{ $campista->nome }}')" 
+                                        <button onclick="abrirModalConfidentes({{ $campista->id }}, {{ json_encode($campista->nome) }})" 
                                                 class="text-purple-500 hover:text-purple-700 transition-colors" title="Confidentes">
                                             <i class="fas fa-user-tie"></i>
                                         </button>
-                                        <button onclick="removerCampista({{ $campista->id }}, '{{ $campista->nome }}', {{ !empty($campista->tribo_id) ? 'true' : 'false' }})" 
+                                        <button onclick="removerCampista({{ $campista->id }}, {{ json_encode($campista->nome) }}, {{ !empty($campista->tribo_id) ? 'true' : 'false' }})" 
                                                 class="text-red-500 hover:text-red-700 transition-colors" title="Excluir">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -963,13 +963,13 @@
                                     <i class="fas fa-user-plus mr-1"></i>Adicionar a Tribo
                                 </button>
                             @endif
-                            <button onclick="abrirModalConhecidos({{ $campista->id }}, '{{ $campista->nome }}')" class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-lg">
+                            <button onclick="abrirModalConhecidos({{ $campista->id }}, {{ json_encode($campista->nome) }})" class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-lg">
                                 <i class="fas fa-user-friends mr-1"></i>Conhecidos
                             </button>
-                            <button onclick="abrirModalConfidentes({{ $campista->id }}, '{{ $campista->nome }}')" class="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-lg">
+                            <button onclick="abrirModalConfidentes({{ $campista->id }}, {{ json_encode($campista->nome) }})" class="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-lg">
                                 <i class="fas fa-user-tie mr-1"></i>Confidentes
                             </button>
-                            <button onclick="removerCampista({{ $campista->id }}, '{{ $campista->nome }}', {{ !empty($campista->tribo_id) ? 'true' : 'false' }})" class="text-xs px-3 py-1 bg-red-100 text-red-700 rounded-lg">
+                            <button onclick="removerCampista({{ $campista->id }}, {{ json_encode($campista->nome) }}, {{ !empty($campista->tribo_id) ? 'true' : 'false' }})" class="text-xs px-3 py-1 bg-red-100 text-red-700 rounded-lg">
                                 <i class="fas fa-trash mr-1"></i>Excluir
                             </button>
                         </div>
@@ -1258,7 +1258,7 @@
                 loadingTimeout = setTimeout(() => {
                     console.warn('Loading timeout - escondendo automaticamente');
                     esconderLoading();
-                }, 30000);
+                }, 3000);
             }
         }
 
@@ -1938,44 +1938,60 @@
     }
 
     function abrirModalConhecidos(campistaId, campistaNome, skipLoading = false) {
-        // Limpar campo de busca
-        const buscarInput = document.getElementById("buscarConhecido");
-        if (buscarInput) {
-            buscarInput.value = "";
-        }
-        
-        // Limpar checkboxes ao abrir o modal
-        document.querySelectorAll('.conhecido-checkbox').forEach(cb => {
-            // Não permitir que o próprio campista seja selecionado como conhecido
-            if (cb.value == campistaId) {
-                cb.disabled = true;
-                cb.checked = false;
-            } else {
-                cb.disabled = false;
-                cb.checked = false;
+        try {
+            // Garantir que qualquer loading anterior seja escondido
+            esconderLoading();
+            
+            // Limpar campo de busca
+            const buscarInput = document.getElementById("buscarConhecido");
+            if (buscarInput) {
+                buscarInput.value = "";
             }
-        });
-        
-        // Mostrar todos os itens novamente (resetar filtro)
-        document.querySelectorAll('.conhecido-checkbox-item').forEach(item => {
-            item.style.display = '';
-        });
-        
-        document.getElementById("campistaNome").innerText = campistaNome;
-        document.getElementById("modalConhecidos").dataset.campistaId = campistaId;
-        const listaConhecidos = document.getElementById("listaConhecidos");
-        listaConhecidos.innerHTML = "";
+            
+            // Limpar checkboxes ao abrir o modal
+            document.querySelectorAll('.conhecido-checkbox').forEach(cb => {
+                // Não permitir que o próprio campista seja selecionado como conhecido
+                if (cb.value == campistaId) {
+                    cb.disabled = true;
+                    cb.checked = false;
+                } else {
+                    cb.disabled = false;
+                    cb.checked = false;
+                }
+            });
+            
+            // Mostrar todos os itens novamente (resetar filtro)
+            document.querySelectorAll('.conhecido-checkbox-item').forEach(item => {
+                item.style.display = '';
+            });
+            
+            const nomeElement = document.getElementById("campistaNome");
+            if (nomeElement) {
+                nomeElement.innerText = campistaNome;
+            }
+            
+            const modalElement = document.getElementById("modalConhecidos");
+            if (modalElement) {
+                modalElement.dataset.campistaId = campistaId;
+            }
+            
+            const listaConhecidos = document.getElementById("listaConhecidos");
+            if (listaConhecidos) {
+                listaConhecidos.innerHTML = "";
+            }
 
             const modal = document.getElementById("modalConhecidos");
             const content = document.getElementById("modalConhecidosContent");
-            modal.classList.remove("hidden");
-            content.classList.add('modal-enter');
+            if (modal && content) {
+                modal.classList.remove("hidden");
+                content.classList.add('modal-enter');
+            }
 
             if (!skipLoading) {
                 mostrarLoading('Carregando conhecidos...');
             }
 
-        fetch(`/conhecidos/${campistaId}`)
+            fetch(`/conhecidos/${campistaId}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -1991,8 +2007,9 @@
                         const li = document.createElement("li");
                             li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
                             li.style.animationDelay = `${index * 0.05}s`;
+                            const nomeEscapado = String(conhecido.nome).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                             li.innerHTML = `
-                                <span class="text-gray-700">${conhecido.nome}</span>
+                                <span class="text-gray-700">${nomeEscapado}</span>
                                 <button onclick="removerConhecido(${campistaId}, ${conhecido.id}, this.parentElement)" 
                                         class="text-red-500 hover:text-red-700 transition-colors">
                                     <i class="fas fa-times"></i>
@@ -2009,9 +2026,15 @@
                     esconderLoading();
                     alert('Erro ao carregar conhecidos. Por favor, tente novamente.');
                 });
+        } catch (error) {
+            console.error('Erro ao abrir modal de conhecidos:', error);
+            esconderLoading();
+            alert('Erro ao abrir modal. Por favor, tente novamente.');
+        }
     }
 
     function fecharModal() {
+            esconderLoading(); // Garantir que loading seja escondido ao fechar
             const modal = document.getElementById("modalConhecidos");
             const content = document.getElementById("modalConhecidosContent");
             content.classList.add('modal-exit');
@@ -2136,23 +2159,40 @@
     }
 
     function abrirModalConfidentes(campistaId, campistaNome, skipLoading = false) {
-        // Limpar checkboxes ao abrir o modal
-        document.querySelectorAll('.confidente-checkbox').forEach(cb => cb.checked = false);
-        document.getElementById("campistaNomeConfidentes").innerText = campistaNome;
-        document.getElementById("modalConfidentes").dataset.campistaId = campistaId;
-        const listaConfidentes = document.getElementById("listaConfidentes");
-        listaConfidentes.innerHTML = "";
+        try {
+            // Garantir que qualquer loading anterior seja escondido
+            esconderLoading();
+            
+            // Limpar checkboxes ao abrir o modal
+            document.querySelectorAll('.confidente-checkbox').forEach(cb => cb.checked = false);
+            
+            const nomeElement = document.getElementById("campistaNomeConfidentes");
+            if (nomeElement) {
+                nomeElement.innerText = campistaNome;
+            }
+            
+            const modalElement = document.getElementById("modalConfidentes");
+            if (modalElement) {
+                modalElement.dataset.campistaId = campistaId;
+            }
+            
+            const listaConfidentes = document.getElementById("listaConfidentes");
+            if (listaConfidentes) {
+                listaConfidentes.innerHTML = "";
+            }
 
             const modal = document.getElementById("modalConfidentes");
             const content = document.getElementById("modalConfidentesContent");
-            modal.classList.remove("hidden");
-            content.classList.add('modal-enter');
+            if (modal && content) {
+                modal.classList.remove("hidden");
+                content.classList.add('modal-enter');
+            }
 
             if (!skipLoading) {
                 mostrarLoading('Carregando confidentes...');
             }
 
-        fetch(`/confidentes/${campistaId}`)
+            fetch(`/confidentes/${campistaId}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -2168,8 +2208,9 @@
                         const li = document.createElement("li");
                             li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
                             li.style.animationDelay = `${index * 0.05}s`;
+                            const nomeEscapado = String(confidente.nome).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                             li.innerHTML = `
-                                <span class="text-gray-700">${confidente.nome}</span>
+                                <span class="text-gray-700">${nomeEscapado}</span>
                                 <button onclick="removerConfidente(${campistaId}, ${confidente.id}, this.parentElement)" 
                                         class="text-red-500 hover:text-red-700 transition-colors">
                                     <i class="fas fa-times"></i>
@@ -2186,9 +2227,15 @@
                     esconderLoading();
                     alert('Erro ao carregar confidentes. Por favor, tente novamente.');
                 });
+        } catch (error) {
+            console.error('Erro ao abrir modal de confidentes:', error);
+            esconderLoading();
+            alert('Erro ao abrir modal. Por favor, tente novamente.');
+        }
     }
 
     function fecharModalConfidentes() {
+            esconderLoading(); // Garantir que loading seja escondido ao fechar
             const modal = document.getElementById("modalConfidentes");
             const content = document.getElementById("modalConfidentesContent");
             content.classList.add('modal-exit');
