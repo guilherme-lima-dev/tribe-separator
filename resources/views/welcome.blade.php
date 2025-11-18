@@ -1254,11 +1254,11 @@
                 text.textContent = texto;
                 overlay.classList.remove('hidden');
                 
-                // Timeout de segurança: esconder loading após 30 segundos
+                // Timeout de segurança: esconder loading após 15 segundos
                 loadingTimeout = setTimeout(() => {
-                    console.warn('Loading timeout - escondendo automaticamente');
+                    console.warn('Loading timeout - escondendo automaticamente após 15s');
                     esconderLoading();
-                }, 3000);
+                }, 15000);
             }
         }
 
@@ -1274,6 +1274,36 @@
                 overlay.classList.add('hidden');
             }
         }
+
+        // Garantir que loading seja escondido em caso de erro não tratado
+        window.addEventListener('error', function(event) {
+            console.error('Erro global capturado:', event.error);
+            esconderLoading();
+        });
+
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Promise rejeitada não tratada:', event.reason);
+            esconderLoading();
+        });
+
+        // Garantir que loading seja escondido quando a página perde o foco
+        window.addEventListener('beforeunload', function() {
+            esconderLoading();
+        });
+
+        // Garantir que loading seja escondido quando o modal é fechado via ESC ou clique fora
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                esconderLoading();
+            }
+        });
+
+        // Garantir que loading seja escondido ao clicar fora dos modais
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal-backdrop')) {
+                esconderLoading();
+            }
+        });
 
         // Funções de Tribo
         function abrirModalAdicionarTribo() {
@@ -1305,18 +1335,27 @@
             // Buscar os confidentes da tribo e marcar os checkboxes
             mostrarLoading('Carregando confidentes da tribo...');
             fetch(`/tribos`)
-                .then(response => response.json())
-                .then(tribos => {
-                    const tribo = tribos.find(t => t.id == id);
-                    if (tribo && tribo.confidentes) {
-                        tribo.confidentes.forEach(confidente => {
-                            const checkbox = document.querySelector(`input[data-confidente-id="${confidente.id}"]`);
-                            if (checkbox) {
-                                checkbox.checked = true;
-                            }
-                        });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
+                    return response.json().catch(err => {
+                        throw new Error('Resposta inválida do servidor');
+                    });
+                })
+                .then(tribos => {
                     esconderLoading();
+                    if (tribos && Array.isArray(tribos)) {
+                        const tribo = tribos.find(t => t.id == id);
+                        if (tribo && tribo.confidentes) {
+                            tribo.confidentes.forEach(confidente => {
+                                const checkbox = document.querySelector(`input[data-confidente-id="${confidente.id}"]`);
+                                if (checkbox) {
+                                    checkbox.checked = true;
+                                }
+                            });
+                        }
+                    }
                 })
                 .catch(error => {
                     console.error('Erro ao carregar confidentes:', error);
@@ -1330,6 +1369,7 @@
         }
 
         function fecharModalTribo() {
+            esconderLoading(); // Garantir que loading seja escondido ao fechar
             const modal = document.getElementById('modalTribo');
             const content = document.getElementById('modalTriboContent');
             content.classList.add('modal-exit');
@@ -1371,13 +1411,20 @@
                     confidentes_ids: confidentesSelecionados
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
                 esconderLoading();
-                if (data.success) {
+                if (data && data.success) {
                     location.reload();
                 } else {
-                    alert(data.message || 'Erro ao salvar tribo.');
+                    alert(data?.message || 'Erro ao salvar tribo.');
                     btn.disabled = false;
                     btn.innerHTML = btnTextOriginal;
                 }
@@ -1385,7 +1432,7 @@
             .catch(error => {
                 console.error('Erro:', error);
                 esconderLoading();
-                alert('Erro ao salvar tribo.');
+                alert('Erro ao salvar tribo. Por favor, tente novamente.');
                 btn.disabled = false;
                 btn.innerHTML = btnTextOriginal;
             });
@@ -1402,19 +1449,26 @@
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
                 esconderLoading();
-                if (data.success) {
+                if (data && data.success) {
                     location.reload();
                 } else {
-                    alert(data.message || 'Erro ao remover tribo.');
+                    alert(data?.message || 'Erro ao remover tribo.');
                 }
             })
             .catch(error => {
                 console.error('Erro:', error);
                 esconderLoading();
-                alert('Erro ao remover tribo.');
+                alert('Erro ao remover tribo. Por favor, tente novamente.');
             });
         }
 
@@ -1734,6 +1788,7 @@
         }
 
         function fecharModalAdicionarCampista() {
+            esconderLoading(); // Garantir que loading seja escondido ao fechar
             const modal = document.getElementById("modalAdicionarCampista");
             const content = document.getElementById("modalAdicionarCampistaContent");
             content.classList.add('modal-exit');
@@ -1777,10 +1832,17 @@
                 },
                 body: JSON.stringify({ nome, genero, peso, altura })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
                 esconderLoading();
-                if (data.success) {
+                if (data && data.success) {
                     fecharModalAdicionarCampista();
                     
                     if (isEdit) {
@@ -1799,7 +1861,7 @@
                         location.reload();
                     }
                 } else {
-                    alert(data.message || (isEdit ? "Erro ao atualizar campista." : "Erro ao adicionar campista."));
+                    alert(data?.message || (isEdit ? "Erro ao atualizar campista." : "Erro ao adicionar campista."));
                     btn.disabled = false;
                     btn.innerHTML = btnTextOriginal;
                 }
@@ -1807,7 +1869,7 @@
             .catch(error => {
                 console.error("Erro:", error);
                 esconderLoading();
-                alert(isEdit ? "Erro ao atualizar campista." : "Erro ao adicionar campista.");
+                alert(isEdit ? "Erro ao atualizar campista. Por favor, tente novamente." : "Erro ao adicionar campista. Por favor, tente novamente.");
                 btn.disabled = false;
                 btn.innerHTML = btnTextOriginal;
             });
@@ -1910,18 +1972,25 @@
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
                 esconderLoading();
-                if (data.success) {
+                if (data && data.success) {
                     if (row) {
                         row.style.opacity = '0';
                         setTimeout(() => location.reload(), 300);
-        } else {
+                    } else {
                         location.reload();
                     }
                 } else {
-                    alert(data.message || "Erro ao remover campista.");
+                    alert(data?.message || "Erro ao remover campista.");
                     if (row) {
                         row.style.opacity = '1';
                     }
@@ -1930,7 +1999,7 @@
             .catch(error => {
                 console.error("Erro:", error);
                 esconderLoading();
-                alert("Erro ao remover campista.");
+                alert("Erro ao remover campista. Por favor, tente novamente.");
                 if (row) {
                     row.style.opacity = '1';
                 }
@@ -1977,7 +2046,7 @@
             
             const listaConhecidos = document.getElementById("listaConhecidos");
             if (listaConhecidos) {
-                listaConhecidos.innerHTML = "";
+                listaConhecidos.innerHTML = '<li class="text-center text-gray-500 p-3"><i class="fas fa-spinner fa-spin mr-2"></i> Carregando...</li>';
             }
 
             const modal = document.getElementById("modalConhecidos");
@@ -1987,8 +2056,12 @@
                 content.classList.add('modal-enter');
             }
 
+            // Sempre garantir que não há loading anterior antes de fazer fetch
             if (!skipLoading) {
                 mostrarLoading('Carregando conhecidos...');
+            } else {
+                // Mesmo com skipLoading, garantir que não há loading ativo
+                esconderLoading();
             }
 
             fetch(`/conhecidos/${campistaId}`)
@@ -2001,8 +2074,11 @@
                 });
             })
             .then(data => {
-                    esconderLoading();
                     if (data && data.conhecidos) {
+                        listaConhecidos.innerHTML = "";
+                        // Coletar IDs dos conhecidos já adicionados
+                        const conhecidosIds = data.conhecidos.map(c => c.id);
+                        
                         data.conhecidos.forEach((conhecido, index) => {
                         const li = document.createElement("li");
                             li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
@@ -2017,20 +2093,151 @@
                             `;
                         listaConhecidos.appendChild(li);
                     });
+                    
+                    // Desabilitar checkboxes dos conhecidos já adicionados
+                    document.querySelectorAll('.conhecido-checkbox').forEach(cb => {
+                        if (conhecidosIds.includes(parseInt(cb.value))) {
+                            cb.disabled = true;
+                            cb.checked = false;
+                        }
+                    });
                     } else {
                         console.warn('Dados de conhecidos não encontrados na resposta');
+                        if (listaConhecidos) {
+                            listaConhecidos.innerHTML = '<li class="text-center text-gray-500 p-3">Nenhum conhecido encontrado</li>';
+                        }
                     }
             })
                 .catch(error => {
                     console.error('Erro ao carregar conhecidos:', error);
-                    esconderLoading();
+                    if (listaConhecidos) {
+                        listaConhecidos.innerHTML = '<li class="text-center text-red-500 p-3">Erro ao carregar conhecidos</li>';
+                    }
                     alert('Erro ao carregar conhecidos. Por favor, tente novamente.');
+                })
+                .finally(() => {
+                    esconderLoading();
                 });
         } catch (error) {
             console.error('Erro ao abrir modal de conhecidos:', error);
             esconderLoading();
             alert('Erro ao abrir modal. Por favor, tente novamente.');
         }
+    }
+
+    // Função auxiliar para recarregar lista de conhecidos sem reabrir modal
+    function recarregarListaConhecidos(campistaId) {
+        const listaConhecidos = document.getElementById("listaConhecidos");
+        if (!listaConhecidos) return;
+        
+        listaConhecidos.innerHTML = '<li class="text-center text-gray-500 p-3"><i class="fas fa-spinner fa-spin mr-2"></i> Atualizando...</li>';
+        
+        fetch(`/conhecidos/${campistaId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
+            .then(data => {
+                listaConhecidos.innerHTML = "";
+                if (data && data.conhecidos) {
+                    // Coletar IDs dos conhecidos já adicionados
+                    const conhecidosIds = data.conhecidos.map(c => c.id);
+                    
+                    data.conhecidos.forEach((conhecido, index) => {
+                        const li = document.createElement("li");
+                        li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
+                        li.style.animationDelay = `${index * 0.05}s`;
+                        const nomeEscapado = String(conhecido.nome).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                        li.innerHTML = `
+                            <span class="text-gray-700">${nomeEscapado}</span>
+                            <button onclick="removerConhecido(${campistaId}, ${conhecido.id}, this.parentElement)" 
+                                    class="text-red-500 hover:text-red-700 transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        listaConhecidos.appendChild(li);
+                    });
+                    
+                    // Desabilitar checkboxes dos conhecidos já adicionados
+                    document.querySelectorAll('.conhecido-checkbox').forEach(cb => {
+                        if (conhecidosIds.includes(parseInt(cb.value))) {
+                            cb.disabled = true;
+                            cb.checked = false;
+                        } else if (cb.value != campistaId) {
+                            // Reabilitar checkboxes que não estão na lista e não são o próprio campista
+                            cb.disabled = false;
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao recarregar conhecidos:', error);
+                listaConhecidos.innerHTML = '<li class="text-center text-red-500 p-3">Erro ao carregar conhecidos</li>';
+            });
+    }
+
+    // Função auxiliar para recarregar lista de confidentes sem reabrir modal
+    function recarregarListaConfidentes(campistaId) {
+        const listaConfidentes = document.getElementById("listaConfidentes");
+        if (!listaConfidentes) return;
+        
+        listaConfidentes.innerHTML = '<li class="text-center text-gray-500 p-3"><i class="fas fa-spinner fa-spin mr-2"></i> Atualizando...</li>';
+        
+        fetch(`/confidentes/${campistaId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
+            .then(data => {
+                listaConfidentes.innerHTML = "";
+                if (data && data.confidentes) {
+                    // Coletar IDs dos confidentes já adicionados
+                    const confidentesIds = data.confidentes.map(c => c.id);
+                    
+                    data.confidentes.forEach((confidente, index) => {
+                        const li = document.createElement("li");
+                        li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
+                        li.style.animationDelay = `${index * 0.05}s`;
+                        const nomeEscapado = String(confidente.nome).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                        li.innerHTML = `
+                            <span class="text-gray-700">${nomeEscapado}</span>
+                            <button onclick="removerConfidente(${campistaId}, ${confidente.id}, this.parentElement)" 
+                                    class="text-red-500 hover:text-red-700 transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        listaConfidentes.appendChild(li);
+                    });
+                    
+                    // Desabilitar checkboxes dos confidentes já adicionados
+                    document.querySelectorAll('.confidente-checkbox').forEach(cb => {
+                        if (confidentesIds.includes(parseInt(cb.value))) {
+                            cb.disabled = true;
+                            cb.checked = false;
+                        } else {
+                            // Reabilitar checkboxes que não estão na lista
+                            cb.disabled = false;
+                        }
+                    });
+                } else {
+                    // Se não há confidentes, reabilitar todos os checkboxes
+                    document.querySelectorAll('.confidente-checkbox').forEach(cb => {
+                        cb.disabled = false;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao recarregar confidentes:', error);
+                listaConfidentes.innerHTML = '<li class="text-center text-red-500 p-3">Erro ao carregar confidentes</li>';
+            });
     }
 
     function fecharModal() {
@@ -2085,25 +2292,25 @@
                 });
             })
             .then(data => {
-                esconderLoading();
                 if (data && data.success) {
-                    const campistaNome = document.getElementById("campistaNome").innerText;
-                    // Desmarcar checkboxes selecionados
-                    checkboxes.forEach(cb => cb.checked = false);
-                    // Recarregar modal sem mostrar loading novamente (já está escondido)
-                    abrirModalConhecidos(campistaId, campistaNome, true);
+                    // Desabilitar checkboxes dos conhecidos adicionados
+                    checkboxes.forEach(cb => {
+                        cb.disabled = true;
+                        cb.checked = false;
+                    });
+                    // CORREÇÃO: Apenas recarregar a lista, não reabrir o modal
+                    recarregarListaConhecidos(campistaId);
                 } else {
                     alert(data?.message || "Erro ao adicionar conhecido(s).");
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = btnTextOriginal;
-                    }
                 }
             })
             .catch(error => {
                 console.error("Erro:", error);
-                esconderLoading();
                 alert("Erro ao adicionar conhecido(s). Por favor, tente novamente.");
+            })
+            .finally(() => {
+                // CRÍTICO: Sempre executado
+                esconderLoading();
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = btnTextOriginal;
@@ -2137,24 +2344,39 @@
             },
             body: JSON.stringify({campistaId, conhecidoId})
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
-                esconderLoading();
-                if (data.success) {
+                if (data && data.success) {
+                    // Reabilitar checkbox do conhecido removido
+                    const checkbox = document.querySelector(`.conhecido-checkbox[value="${conhecidoId}"]`);
+                    if (checkbox && checkbox.value != campistaId) {
+                        checkbox.disabled = false;
+                        checkbox.checked = false;
+                    }
+                    
                     liElement.style.transition = 'opacity 0.3s, transform 0.3s';
                     liElement.style.opacity = '0';
                     liElement.style.transform = 'translateX(-20px)';
                     setTimeout(() => liElement.remove(), 300);
                 } else {
-                    alert(data.message || "Erro ao remover conhecido.");
+                    alert(data?.message || "Erro ao remover conhecido.");
                     liElement.style.opacity = '1';
                 }
             })
             .catch(error => {
                 console.error("Erro:", error);
-                esconderLoading();
-                alert("Erro ao remover conhecido.");
+                alert("Erro ao remover conhecido. Por favor, tente novamente.");
                 liElement.style.opacity = '1';
+            })
+            .finally(() => {
+                esconderLoading();
             });
     }
 
@@ -2178,7 +2400,7 @@
             
             const listaConfidentes = document.getElementById("listaConfidentes");
             if (listaConfidentes) {
-                listaConfidentes.innerHTML = "";
+                listaConfidentes.innerHTML = '<li class="text-center text-gray-500 p-3"><i class="fas fa-spinner fa-spin mr-2"></i> Carregando...</li>';
             }
 
             const modal = document.getElementById("modalConfidentes");
@@ -2188,8 +2410,12 @@
                 content.classList.add('modal-enter');
             }
 
+            // Sempre garantir que não há loading anterior antes de fazer fetch
             if (!skipLoading) {
                 mostrarLoading('Carregando confidentes...');
+            } else {
+                // Mesmo com skipLoading, garantir que não há loading ativo
+                esconderLoading();
             }
 
             fetch(`/confidentes/${campistaId}`)
@@ -2202,8 +2428,11 @@
                 });
             })
             .then(data => {
-                    esconderLoading();
                     if (data && data.confidentes) {
+                        listaConfidentes.innerHTML = "";
+                        // Coletar IDs dos confidentes já adicionados
+                        const confidentesIds = data.confidentes.map(c => c.id);
+                        
                         data.confidentes.forEach((confidente, index) => {
                         const li = document.createElement("li");
                             li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
@@ -2218,14 +2447,37 @@
                             `;
                         listaConfidentes.appendChild(li);
                     });
+                    
+                    // Desabilitar checkboxes dos confidentes já adicionados
+                    document.querySelectorAll('.confidente-checkbox').forEach(cb => {
+                        if (confidentesIds.includes(parseInt(cb.value))) {
+                            cb.disabled = true;
+                            cb.checked = false;
+                        } else {
+                            // Reabilitar checkboxes que não estão na lista
+                            cb.disabled = false;
+                        }
+                    });
                     } else {
                         console.warn('Dados de confidentes não encontrados na resposta');
+                        if (listaConfidentes) {
+                            listaConfidentes.innerHTML = '<li class="text-center text-gray-500 p-3">Nenhum confidente encontrado</li>';
+                        }
+                        // Se não há confidentes, reabilitar todos os checkboxes
+                        document.querySelectorAll('.confidente-checkbox').forEach(cb => {
+                            cb.disabled = false;
+                        });
                     }
             })
                 .catch(error => {
                     console.error('Erro ao carregar confidentes:', error);
-                    esconderLoading();
+                    if (listaConfidentes) {
+                        listaConfidentes.innerHTML = '<li class="text-center text-red-500 p-3">Erro ao carregar confidentes</li>';
+                    }
                     alert('Erro ao carregar confidentes. Por favor, tente novamente.');
+                })
+                .finally(() => {
+                    esconderLoading();
                 });
         } catch (error) {
             console.error('Erro ao abrir modal de confidentes:', error);
@@ -2254,6 +2506,7 @@
         }
 
         function fecharModalImportarCSV() {
+            esconderLoading(); // Garantir que loading seja escondido ao fechar
             const modal = document.getElementById("modalImportarCSV");
             const content = document.getElementById("modalImportarCSVContent");
             content.classList.add('modal-exit');
@@ -2287,24 +2540,32 @@
             })
             .then(response => {
                 if (response.redirected) {
+                    esconderLoading();
                     window.location.href = response.url;
-                } else {
-                    return response.json();
+                    return null;
                 }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
             })
             .then(data => {
-                esconderLoading();
-                if (data && !data.success) {
-                    alert(data.message || 'Erro ao importar CSV.');
-                    btn.disabled = false;
-                    btn.innerHTML = btnTextOriginal;
+                if (data !== null) {
+                    esconderLoading();
+                    if (data && !data.success) {
+                        alert(data.message || 'Erro ao importar CSV.');
+                        btn.disabled = false;
+                        btn.innerHTML = btnTextOriginal;
+                    }
                 }
                 // Se houver redirect, a página será recarregada automaticamente
             })
             .catch(error => {
                 console.error('Erro:', error);
                 esconderLoading();
-                alert('Erro ao importar CSV.');
+                alert('Erro ao importar CSV. Por favor, tente novamente.');
                 btn.disabled = false;
                 btn.innerHTML = btnTextOriginal;
             });
@@ -2351,25 +2612,25 @@
                 });
             })
             .then(data => {
-                esconderLoading();
                 if (data && data.success) {
-                    const campistaNome = document.getElementById("campistaNomeConfidentes").innerText;
-                    // Desmarcar checkboxes selecionados
-                    checkboxes.forEach(cb => cb.checked = false);
-                    // Recarregar modal sem mostrar loading novamente (já está escondido)
-                    abrirModalConfidentes(campistaId, campistaNome, true);
+                    // Desabilitar checkboxes dos confidentes adicionados
+                    checkboxes.forEach(cb => {
+                        cb.disabled = true;
+                        cb.checked = false;
+                    });
+                    // CORREÇÃO: Apenas recarregar a lista, não reabrir o modal
+                    recarregarListaConfidentes(campistaId);
                 } else {
                     alert(data?.message || "Erro ao adicionar confidente(s).");
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = btnTextOriginal;
-                    }
                 }
             })
             .catch(error => {
                 console.error("Erro:", error);
-                esconderLoading();
                 alert("Erro ao adicionar confidente(s). Por favor, tente novamente.");
+            })
+            .finally(() => {
+                // CRÍTICO: Sempre executado
+                esconderLoading();
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = btnTextOriginal;
@@ -2389,24 +2650,39 @@
             },
             body: JSON.stringify({ campistaId, confidenteId })
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
-                esconderLoading();
-                if (data.success) {
+                if (data && data.success) {
+                    // Reabilitar checkbox do confidente removido
+                    const checkbox = document.querySelector(`.confidente-checkbox[value="${confidenteId}"]`);
+                    if (checkbox) {
+                        checkbox.disabled = false;
+                        checkbox.checked = false;
+                    }
+                    
                     liElement.style.transition = 'opacity 0.3s, transform 0.3s';
                     liElement.style.opacity = '0';
                     liElement.style.transform = 'translateX(-20px)';
                     setTimeout(() => liElement.remove(), 300);
                 } else {
-                    alert(data.message || "Erro ao remover confidente.");
+                    alert(data?.message || "Erro ao remover confidente.");
                     liElement.style.opacity = '1';
                 }
             })
             .catch(error => {
                 console.error("Erro:", error);
-                esconderLoading();
-                alert("Erro ao remover confidente.");
+                alert("Erro ao remover confidente. Por favor, tente novamente.");
                 liElement.style.opacity = '1';
+            })
+            .finally(() => {
+                esconderLoading();
             });
         }
 </script>
