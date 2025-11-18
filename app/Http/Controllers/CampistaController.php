@@ -12,8 +12,10 @@ class CampistaController extends Controller
 {
     public function index()
     {
-        // Usar eager loading para otimização
-        $campistas = Campista::with(['conhecidos', 'confidentesConhecidos', 'tribo'])->get();
+        // Usar eager loading para otimização e ordenar alfabeticamente por nome
+        $campistas = Campista::with(['conhecidos', 'confidentesConhecidos', 'tribo'])
+            ->orderBy('nome', 'asc')
+            ->get();
         $tribos = Tribo::with(['campistas', 'confidentes'])->get();
         $confidentes = Confidente::all();
         return response()->view('welcome', compact('campistas', 'tribos', 'confidentes'));
@@ -227,14 +229,41 @@ class CampistaController extends Controller
     public function adicionarConhecido(Request $request)
     {
         $campista = Campista::find($request->campistaId);
-        $conhecido = Campista::find($request->novoConhecidoId);
-
-        if ($campista && $conhecido) {
-            $campista->conhecidos()->attach($conhecido->id);
-            return response()->json(['success' => true]);
+        
+        if (!$campista) {
+            return response()->json(['success' => false, 'message' => 'Campista não encontrado.']);
         }
 
-        return response()->json(['success' => false, 'message' => 'Campista ou conhecido não encontrado.']);
+        // Aceitar tanto um único ID quanto um array de IDs
+        $conhecidosIds = $request->novoConhecidoId ?? [];
+        if (!is_array($conhecidosIds)) {
+            $conhecidosIds = [$conhecidosIds];
+        }
+        
+        // Filtrar IDs vazios e evitar que o campista se adicione como conhecido
+        $conhecidosIds = array_filter($conhecidosIds, function($id) use ($campista) {
+            return !empty($id) && $id != $campista->id;
+        });
+
+        if (empty($conhecidosIds)) {
+            return response()->json(['success' => false, 'message' => 'Nenhum conhecido selecionado ou seleção inválida.']);
+        }
+
+        // Verificar se todos os conhecidos existem
+        $conhecidos = Campista::whereIn('id', $conhecidosIds)->get();
+        if ($conhecidos->count() !== count($conhecidosIds)) {
+            return response()->json(['success' => false, 'message' => 'Um ou mais conhecidos não foram encontrados.']);
+        }
+
+        // Adicionar todos os conhecidos (attach ignora duplicatas)
+        $campista->conhecidos()->attach($conhecidosIds);
+        
+        return response()->json([
+            'success' => true,
+            'message' => count($conhecidosIds) > 1 
+                ? count($conhecidosIds) . ' conhecidos adicionados com sucesso.' 
+                : 'Conhecido adicionado com sucesso.'
+        ]);
     }
 
     public function removerConhecido(Request $request)
@@ -260,14 +289,41 @@ class CampistaController extends Controller
     public function adicionarConfidenteConhecido(Request $request)
     {
         $campista = Campista::find($request->campistaId);
-        $confidente = Confidente::find($request->novoConfidenteId);
-
-        if ($campista && $confidente) {
-            $campista->confidentesConhecidos()->attach($confidente->id);
-            return response()->json(['success' => true]);
+        
+        if (!$campista) {
+            return response()->json(['success' => false, 'message' => 'Campista não encontrado.']);
         }
 
-        return response()->json(['success' => false, 'message' => 'Campista ou confidente não encontrado.']);
+        // Aceitar tanto um único ID quanto um array de IDs
+        $confidentesIds = $request->novoConfidenteId ?? [];
+        if (!is_array($confidentesIds)) {
+            $confidentesIds = [$confidentesIds];
+        }
+        
+        // Filtrar IDs vazios
+        $confidentesIds = array_filter($confidentesIds, function($id) {
+            return !empty($id);
+        });
+
+        if (empty($confidentesIds)) {
+            return response()->json(['success' => false, 'message' => 'Nenhum confidente selecionado.']);
+        }
+
+        // Verificar se todos os confidentes existem
+        $confidentes = Confidente::whereIn('id', $confidentesIds)->get();
+        if ($confidentes->count() !== count($confidentesIds)) {
+            return response()->json(['success' => false, 'message' => 'Um ou mais confidentes não foram encontrados.']);
+        }
+
+        // Adicionar todos os confidentes (attach ignora duplicatas)
+        $campista->confidentesConhecidos()->attach($confidentesIds);
+        
+        return response()->json([
+            'success' => true,
+            'message' => count($confidentesIds) > 1 
+                ? count($confidentesIds) . ' confidentes adicionados com sucesso.' 
+                : 'Confidente adicionado com sucesso.'
+        ]);
     }
 
     public function removerConfidenteConhecido(Request $request)

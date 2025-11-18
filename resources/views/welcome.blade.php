@@ -1123,15 +1123,24 @@
                     </ul>
                 </div>
             <div class="border-t pt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Adicionar Conhecido</label>
-                <select id="novoConhecidoId" class="input-modern mb-3">
-                        <option value="">Selecione um Campista...</option>
-                        @foreach($campistas as $campista)
-                            <option value="{{ $campista->id }}">{{ $campista->nome }}</option>
-                        @endforeach
-                    </select>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Adicionar Conhecido(s)</label>
+                <input type="text" 
+                       id="buscarConhecido" 
+                       placeholder="Buscar campista..." 
+                       onkeyup="filtrarConhecidos()"
+                       class="input-modern mb-3 w-full">
+                <div id="listaConhecidosCheckboxes" class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-3 mb-3 bg-gray-50">
+                    @foreach($campistas as $campista)
+                        <label class="conhecido-checkbox-item flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer" data-nome="{{ strtolower($campista->nome) }}">
+                            <input type="checkbox" 
+                                   value="{{ $campista->id }}" 
+                                   class="conhecido-checkbox mr-3 h-4 w-4 text-[#2E8B57] focus:ring-[#2E8B57] border-gray-300 rounded">
+                            <span class="text-sm text-gray-700">{{ $campista->nome }}</span>
+                        </label>
+                    @endforeach
+                </div>
                 <button onclick="adicionarConhecido()" class="btn-primary w-full">
-                    <i class="fas fa-plus mr-2"></i>Adicionar Conhecido
+                    <i class="fas fa-plus mr-2"></i>Adicionar Conhecido(s) Selecionado(s)
                     </button>
                 </div>
             </div>
@@ -1151,15 +1160,19 @@
                     </ul>
                 </div>
             <div class="border-t pt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Adicionar Confidente</label>
-                <select id="novoConfidenteId" class="input-modern mb-3">
-                        <option value="">Selecione um Confidente...</option>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Adicionar Confidente(s)</label>
+                <div class="max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-3 mb-3 bg-gray-50">
                     @foreach($confidentes as $confidente)
-                        <option value="{{ $confidente->id }}">{{ $confidente->nome }}</option>
-                        @endforeach
-                    </select>
+                        <label class="flex items-center p-2 hover:bg-gray-100 rounded cursor-pointer">
+                            <input type="checkbox" 
+                                   value="{{ $confidente->id }}" 
+                                   class="confidente-checkbox mr-3 h-4 w-4 text-[#2E8B57] focus:ring-[#2E8B57] border-gray-300 rounded">
+                            <span class="text-sm text-gray-700">{{ $confidente->nome }}</span>
+                        </label>
+                    @endforeach
+                </div>
                 <button onclick="adicionarConfidente()" class="btn-primary w-full">
-                    <i class="fas fa-plus mr-2"></i>Adicionar Confidente
+                    <i class="fas fa-plus mr-2"></i>Adicionar Confidente(s) Selecionado(s)
                     </button>
                 </div>
             </div>
@@ -1222,23 +1235,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/js/select2.min.js"></script>
 <script>
-        // Inicializar Select2
-        $(document).ready(function() {
-        $('#novoConhecidoId').select2({
-            placeholder: "Selecione um Campista...",
-            allowClear: true,
-                width: '100%'
-        });
-    });
+        // Select2 removido - agora usamos checkboxes para seleção múltipla
 
         // Funções de Loading
+        let loadingTimeout = null;
+        
         function mostrarLoading(texto = 'Processando...') {
-            document.getElementById('loadingText').textContent = texto;
-            document.getElementById('loadingOverlay').classList.remove('hidden');
+            // Limpar timeout anterior se existir
+            if (loadingTimeout) {
+                clearTimeout(loadingTimeout);
+                loadingTimeout = null;
+            }
+            
+            const overlay = document.getElementById('loadingOverlay');
+            const text = document.getElementById('loadingText');
+            
+            if (overlay && text) {
+                text.textContent = texto;
+                overlay.classList.remove('hidden');
+                
+                // Timeout de segurança: esconder loading após 30 segundos
+                loadingTimeout = setTimeout(() => {
+                    console.warn('Loading timeout - escondendo automaticamente');
+                    esconderLoading();
+                }, 30000);
+            }
         }
 
         function esconderLoading() {
-            document.getElementById('loadingOverlay').classList.add('hidden');
+            // Limpar timeout se existir
+            if (loadingTimeout) {
+                clearTimeout(loadingTimeout);
+                loadingTimeout = null;
+            }
+            
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
         }
 
         // Funções de Tribo
@@ -1433,15 +1467,96 @@
         let itemsPerPage = 25;
         let filteredItems = [];
 
+        // Funções para gerenciar parâmetros da URL
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                page: parseInt(params.get('page')) || 1,
+                perPage: params.get('perPage') || '25',
+                search: params.get('search') || ''
+            };
+        }
+
+        function updateUrlParams(page, perPage, search = '') {
+            const params = new URLSearchParams();
+            if (page > 1) params.set('page', page);
+            if (perPage !== '25') params.set('perPage', perPage);
+            if (search) params.set('search', search);
+            
+            const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.pushState({ page, perPage, search }, '', newUrl);
+        }
+
         // Inicializar paginação ao carregar a página
         document.addEventListener('DOMContentLoaded', function() {
             initializePagination();
         });
 
+        // Suportar botão voltar/avançar do navegador
+        window.addEventListener('popstate', function(event) {
+            if (event.state) {
+                currentPage = event.state.page || 1;
+                itemsPerPage = event.state.perPage === 'all' ? 'all' : parseInt(event.state.perPage) || 25;
+                
+                // Restaurar busca
+                const searchInput = document.getElementById("searchInput");
+                if (searchInput) {
+                    searchInput.value = event.state.search || '';
+                }
+                
+                // Restaurar select
+                const select = document.getElementById('itemsPerPage');
+                if (select) {
+                    select.value = itemsPerPage;
+                }
+                
+                // Atualizar filtros e renderizar
+                updateFilteredItems();
+                renderPage();
+            } else {
+                // Se não houver state, ler da URL
+                const urlParams = getUrlParams();
+                currentPage = urlParams.page;
+                itemsPerPage = urlParams.perPage === 'all' ? 'all' : parseInt(urlParams.perPage);
+                
+                const searchInput = document.getElementById("searchInput");
+                if (searchInput) {
+                    searchInput.value = urlParams.search;
+                }
+                
+                const select = document.getElementById('itemsPerPage');
+                if (select) {
+                    select.value = itemsPerPage;
+                }
+                
+                updateFilteredItems();
+                renderPage();
+            }
+        });
+
         function initializePagination() {
+            // Ler parâmetros da URL
+            const urlParams = getUrlParams();
+            currentPage = urlParams.page;
+            itemsPerPage = urlParams.perPage === 'all' ? 'all' : parseInt(urlParams.perPage);
+            
+            // Restaurar busca se houver
+            if (urlParams.search) {
+                const searchInput = document.getElementById("searchInput");
+                if (searchInput) {
+                    searchInput.value = urlParams.search;
+                }
+            }
+            
+            // Restaurar select de itens por página
+            const select = document.getElementById('itemsPerPage');
+            if (select) {
+                select.value = itemsPerPage;
+            }
+            
             // Coletar todos os itens visíveis
             updateFilteredItems();
-            // Renderizar primeira página
+            // Renderizar página
             renderPage();
         }
 
@@ -1547,6 +1662,11 @@
             if (newPage >= 1 && newPage <= totalPages) {
                 currentPage = newPage;
                 renderPage();
+                
+                // Atualizar URL
+                const searchTerm = document.getElementById("searchInput")?.value || '';
+                updateUrlParams(currentPage, itemsPerPage, searchTerm);
+                
                 // Scroll suave para o topo da tabela
                 document.getElementById('campistaTable')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 document.getElementById('campistaCardsContainer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1558,16 +1678,24 @@
             itemsPerPage = select.value === 'all' ? 'all' : parseInt(select.value);
             currentPage = 1; // Resetar para primeira página
             renderPage();
+            
+            // Atualizar URL
+            const searchTerm = document.getElementById("searchInput")?.value || '';
+            updateUrlParams(currentPage, itemsPerPage, searchTerm);
         }
 
         function filterTable() {
-            const input = document.getElementById("searchInput").value.toLowerCase();
+            const input = document.getElementById("searchInput");
+            const searchTerm = input.value.toLowerCase();
             
             // Atualizar lista de itens filtrados
             updateFilteredItems();
             
             // Resetar para primeira página
             currentPage = 1;
+            
+            // Atualizar URL
+            updateUrlParams(currentPage, itemsPerPage, input.value);
             
             // Renderizar página
             renderPage();
@@ -1625,6 +1753,9 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
             
+            // Preservar página atual antes de salvar
+            const paginaAtual = currentPage;
+            
             const id = document.getElementById("campistaId").value;
             const nome = document.getElementById("nomeCampista").value;
             const genero = document.getElementById("generoCampista").value;
@@ -1650,8 +1781,24 @@
             .then(data => {
                 esconderLoading();
                 if (data.success) {
-                    location.reload();
-            } else {
+                    fecharModalAdicionarCampista();
+                    
+                    if (isEdit) {
+                        // Atualizar apenas o campista editado no DOM
+                        atualizarCampistaNoDOM(id, nome, genero, peso, altura);
+                        // Restaurar página atual
+                        currentPage = paginaAtual;
+                        renderPage();
+                        
+                        // Atualizar URL para manter a página
+                        const searchTerm = document.getElementById("searchInput")?.value || '';
+                        updateUrlParams(currentPage, itemsPerPage, searchTerm);
+                    } else {
+                        // Para novo campista, recarregar a página mas manter a última página
+                        // (ou podemos adicionar ao DOM também, mas é mais complexo)
+                        location.reload();
+                    }
+                } else {
                     alert(data.message || (isEdit ? "Erro ao atualizar campista." : "Erro ao adicionar campista."));
                     btn.disabled = false;
                     btn.innerHTML = btnTextOriginal;
@@ -1664,6 +1811,81 @@
                 btn.disabled = false;
                 btn.innerHTML = btnTextOriginal;
             });
+        }
+
+        function atualizarCampistaNoDOM(id, nome, genero, peso, altura) {
+            // Atualizar na tabela (desktop)
+            const row = document.getElementById(`row-${id}`);
+            if (row) {
+                const cells = row.getElementsByTagName('td');
+                if (cells.length >= 5) {
+                    // Atualizar nome (célula 1)
+                    const nomeCell = cells[1];
+                    nomeCell.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <span>${nome}</span>
+                        </div>
+                    `;
+                    
+                    // Atualizar gênero (célula 2)
+                    const generoCell = cells[2];
+                    if (genero === 'm') {
+                        generoCell.innerHTML = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800"><i class="fas fa-mars mr-1"></i>Masculino</span>';
+                    } else {
+                        generoCell.innerHTML = '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-pink-100 text-pink-800"><i class="fas fa-venus mr-1"></i>Feminino</span>';
+                    }
+                    
+                    // Atualizar peso (célula 3)
+                    cells[3].textContent = `${peso} kg`;
+                    
+                    // Atualizar altura (célula 4)
+                    cells[4].textContent = `${altura} cm`;
+                }
+                
+                // Atualizar onclick do botão editar
+                const editBtn = row.querySelector('button[onclick*="abrirModalEditarCampista"]');
+                if (editBtn) {
+                    editBtn.setAttribute('onclick', `abrirModalEditarCampista(${id}, ${JSON.stringify(nome)}, ${JSON.stringify(genero)}, ${peso}, ${altura})`);
+                }
+            }
+            
+            // Atualizar no card (mobile)
+            const card = document.getElementById(`card-${id}`);
+            if (card) {
+                const nomeElement = card.querySelector('h3');
+                if (nomeElement) nomeElement.textContent = nome;
+                
+                // Atualizar gênero (span dentro do flex justify-between)
+                const generoSpan = card.querySelector('.flex.justify-between span:last-child');
+                if (generoSpan) {
+                    if (genero === 'm') {
+                        generoSpan.innerHTML = '<i class="fas fa-mars mr-1"></i>M';
+                        generoSpan.className = 'px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800';
+                    } else {
+                        generoSpan.innerHTML = '<i class="fas fa-venus mr-1"></i>F';
+                        generoSpan.className = 'px-2 py-1 rounded-full text-xs bg-pink-100 text-pink-800';
+                    }
+                }
+                
+                // Atualizar peso e altura (grid com 2 colunas)
+                const gridDiv = card.querySelector('.grid.grid-cols-2');
+                if (gridDiv) {
+                    const divs = gridDiv.querySelectorAll('div');
+                    if (divs.length >= 2) {
+                        divs[0].innerHTML = `<i class="fas fa-weight mr-1"></i>${peso} kg`;
+                        divs[1].innerHTML = `<i class="fas fa-ruler-vertical mr-1"></i>${altura} cm`;
+                    }
+                }
+                
+                // Atualizar onclick do botão editar
+                const editBtn = card.querySelector('button[onclick*="abrirModalEditarCampista"]');
+                if (editBtn) {
+                    editBtn.setAttribute('onclick', `abrirModalEditarCampista(${id}, ${JSON.stringify(nome)}, ${JSON.stringify(genero)}, ${peso}, ${altura})`);
+                }
+            }
+            
+            // Atualizar lista de itens filtrados se necessário
+            updateFilteredItems();
         }
 
         function removerCampista(campistaId, nome, emTribo) {
@@ -1715,7 +1937,30 @@
             });
     }
 
-    function abrirModalConhecidos(campistaId, campistaNome) {
+    function abrirModalConhecidos(campistaId, campistaNome, skipLoading = false) {
+        // Limpar campo de busca
+        const buscarInput = document.getElementById("buscarConhecido");
+        if (buscarInput) {
+            buscarInput.value = "";
+        }
+        
+        // Limpar checkboxes ao abrir o modal
+        document.querySelectorAll('.conhecido-checkbox').forEach(cb => {
+            // Não permitir que o próprio campista seja selecionado como conhecido
+            if (cb.value == campistaId) {
+                cb.disabled = true;
+                cb.checked = false;
+            } else {
+                cb.disabled = false;
+                cb.checked = false;
+            }
+        });
+        
+        // Mostrar todos os itens novamente (resetar filtro)
+        document.querySelectorAll('.conhecido-checkbox-item').forEach(item => {
+            item.style.display = '';
+        });
+        
         document.getElementById("campistaNome").innerText = campistaNome;
         document.getElementById("modalConhecidos").dataset.campistaId = campistaId;
         const listaConhecidos = document.getElementById("listaConhecidos");
@@ -1726,29 +1971,43 @@
             modal.classList.remove("hidden");
             content.classList.add('modal-enter');
 
-            mostrarLoading('Carregando conhecidos...');
+            if (!skipLoading) {
+                mostrarLoading('Carregando conhecidos...');
+            }
 
         fetch(`/conhecidos/${campistaId}`)
-            .then(response => response.json())
-            .then(data => {
-                    esconderLoading();
-                    data.conhecidos.forEach((conhecido, index) => {
-                    const li = document.createElement("li");
-                        li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
-                        li.style.animationDelay = `${index * 0.05}s`;
-                        li.innerHTML = `
-                            <span class="text-gray-700">${conhecido.nome}</span>
-                            <button onclick="removerConhecido(${campistaId}, ${conhecido.id}, this.parentElement)" 
-                                    class="text-red-500 hover:text-red-700 transition-colors">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        `;
-                    listaConhecidos.appendChild(li);
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
                 });
             })
-                .catch(error => {
-                    console.error('Erro:', error);
+            .then(data => {
                     esconderLoading();
+                    if (data && data.conhecidos) {
+                        data.conhecidos.forEach((conhecido, index) => {
+                        const li = document.createElement("li");
+                            li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
+                            li.style.animationDelay = `${index * 0.05}s`;
+                            li.innerHTML = `
+                                <span class="text-gray-700">${conhecido.nome}</span>
+                                <button onclick="removerConhecido(${campistaId}, ${conhecido.id}, this.parentElement)" 
+                                        class="text-red-500 hover:text-red-700 transition-colors">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `;
+                        listaConhecidos.appendChild(li);
+                    });
+                    } else {
+                        console.warn('Dados de conhecidos não encontrados na resposta');
+                    }
+            })
+                .catch(error => {
+                    console.error('Erro ao carregar conhecidos:', error);
+                    esconderLoading();
+                    alert('Erro ao carregar conhecidos. Por favor, tente novamente.');
                 });
     }
 
@@ -1763,20 +2022,28 @@
     }
 
     function adicionarConhecido() {
+        // Mostrar loading IMEDIATAMENTE antes de qualquer processamento
+        mostrarLoading('Adicionando conhecido(s)...');
+        
         const campistaId = document.getElementById("modalConhecidos").dataset.campistaId;
-            const novoConhecidoId = document.getElementById("novoConhecidoId").value;
+        
+        // Buscar checkboxes selecionados
+        const checkboxes = document.querySelectorAll('.conhecido-checkbox:checked');
+        const novoConhecidoIds = Array.from(checkboxes).map(cb => cb.value);
             
-            if (!novoConhecidoId) {
-                alert('Por favor, selecione um campista.');
+            if (novoConhecidoIds.length === 0) {
+                esconderLoading();
+                alert('Por favor, selecione pelo menos um conhecido.');
                 return;
             }
 
-            const btn = event.target;
-            const btnTextOriginal = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adicionando...';
-
-            mostrarLoading('Adicionando conhecido...');
+            // Buscar o botão pelo onclick que contém esta função
+            const btn = document.querySelector('button[onclick="adicionarConhecido()"]');
+            const btnTextOriginal = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adicionando...';
+            }
 
         fetch(`/conhecidos/adicionar`, {
             method: "POST",
@@ -1784,29 +2051,56 @@
                 "Content-Type": "application/json",
                 "X-CSRF-TOKEN": "{{ csrf_token() }}"
             },
-            body: JSON.stringify({campistaId, novoConhecidoId})
+            body: JSON.stringify({campistaId, novoConhecidoId: novoConhecidoIds})
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
                 esconderLoading();
-                if (data.success) {
+                if (data && data.success) {
                     const campistaNome = document.getElementById("campistaNome").innerText;
-                    abrirModalConhecidos(campistaId, campistaNome);
-                    $('#novoConhecidoId').val(null).trigger('change');
+                    // Desmarcar checkboxes selecionados
+                    checkboxes.forEach(cb => cb.checked = false);
+                    // Recarregar modal sem mostrar loading novamente (já está escondido)
+                    abrirModalConhecidos(campistaId, campistaNome, true);
                 } else {
-                    alert(data.message || "Erro ao adicionar conhecido.");
-                    btn.disabled = false;
-                    btn.innerHTML = btnTextOriginal;
+                    alert(data?.message || "Erro ao adicionar conhecido(s).");
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = btnTextOriginal;
+                    }
                 }
             })
             .catch(error => {
                 console.error("Erro:", error);
                 esconderLoading();
-                alert("Erro ao adicionar conhecido.");
-                btn.disabled = false;
-                btn.innerHTML = btnTextOriginal;
+                alert("Erro ao adicionar conhecido(s). Por favor, tente novamente.");
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = btnTextOriginal;
+                }
             });
         }
+
+    function filtrarConhecidos() {
+        const busca = document.getElementById("buscarConhecido").value.toLowerCase();
+        const itens = document.querySelectorAll('.conhecido-checkbox-item');
+        
+        itens.forEach(item => {
+            const nome = item.getAttribute('data-nome');
+            if (nome.includes(busca)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
 
     function removerConhecido(campistaId, conhecidoId, liElement) {
             liElement.style.opacity = '0.5';
@@ -1841,7 +2135,9 @@
             });
     }
 
-    function abrirModalConfidentes(campistaId, campistaNome) {
+    function abrirModalConfidentes(campistaId, campistaNome, skipLoading = false) {
+        // Limpar checkboxes ao abrir o modal
+        document.querySelectorAll('.confidente-checkbox').forEach(cb => cb.checked = false);
         document.getElementById("campistaNomeConfidentes").innerText = campistaNome;
         document.getElementById("modalConfidentes").dataset.campistaId = campistaId;
         const listaConfidentes = document.getElementById("listaConfidentes");
@@ -1852,29 +2148,43 @@
             modal.classList.remove("hidden");
             content.classList.add('modal-enter');
 
-            mostrarLoading('Carregando confidentes...');
+            if (!skipLoading) {
+                mostrarLoading('Carregando confidentes...');
+            }
 
         fetch(`/confidentes/${campistaId}`)
-            .then(response => response.json())
-            .then(data => {
-                    esconderLoading();
-                    data.confidentes.forEach((confidente, index) => {
-                    const li = document.createElement("li");
-                        li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
-                        li.style.animationDelay = `${index * 0.05}s`;
-                        li.innerHTML = `
-                            <span class="text-gray-700">${confidente.nome}</span>
-                            <button onclick="removerConfidente(${campistaId}, ${confidente.id}, this.parentElement)" 
-                                    class="text-red-500 hover:text-red-700 transition-colors">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        `;
-                    listaConfidentes.appendChild(li);
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
                 });
             })
-                .catch(error => {
-                    console.error('Erro:', error);
+            .then(data => {
                     esconderLoading();
+                    if (data && data.confidentes) {
+                        data.confidentes.forEach((confidente, index) => {
+                        const li = document.createElement("li");
+                            li.className = "flex justify-between items-center p-3 bg-gray-50 rounded-lg list-item-enter";
+                            li.style.animationDelay = `${index * 0.05}s`;
+                            li.innerHTML = `
+                                <span class="text-gray-700">${confidente.nome}</span>
+                                <button onclick="removerConfidente(${campistaId}, ${confidente.id}, this.parentElement)" 
+                                        class="text-red-500 hover:text-red-700 transition-colors">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            `;
+                        listaConfidentes.appendChild(li);
+                    });
+                    } else {
+                        console.warn('Dados de confidentes não encontrados na resposta');
+                    }
+            })
+                .catch(error => {
+                    console.error('Erro ao carregar confidentes:', error);
+                    esconderLoading();
+                    alert('Erro ao carregar confidentes. Por favor, tente novamente.');
                 });
     }
 
@@ -1954,20 +2264,28 @@
         }
 
     function adicionarConfidente() {
+        // Mostrar loading IMEDIATAMENTE antes de qualquer processamento
+        mostrarLoading('Adicionando confidente(s)...');
+        
         const campistaId = document.getElementById("modalConfidentes").dataset.campistaId;
-        const novoConfidenteId = document.getElementById("novoConfidenteId").value;
+        
+        // Buscar checkboxes selecionados
+        const checkboxes = document.querySelectorAll('.confidente-checkbox:checked');
+        const novoConfidenteIds = Array.from(checkboxes).map(cb => cb.value);
             
-            if (!novoConfidenteId) {
-                alert('Por favor, selecione um confidente.');
+            if (novoConfidenteIds.length === 0) {
+                esconderLoading();
+                alert('Por favor, selecione pelo menos um confidente.');
                 return;
             }
 
-            const btn = event.target;
-            const btnTextOriginal = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adicionando...';
-
-            mostrarLoading('Adicionando confidente...');
+            // Buscar o botão pelo onclick que contém esta função
+            const btn = document.querySelector('button[onclick="adicionarConfidente()"]');
+            const btnTextOriginal = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Adicionando...';
+            }
 
         fetch(`/confidentes/adicionar`, {
             method: "POST",
@@ -1975,27 +2293,40 @@
                 "Content-Type": "application/json",
                 "X-CSRF-TOKEN": "{{ csrf_token() }}"
             },
-            body: JSON.stringify({ campistaId, novoConfidenteId })
+            body: JSON.stringify({ campistaId, novoConfidenteId: novoConfidenteIds })
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json().catch(err => {
+                    throw new Error('Resposta inválida do servidor');
+                });
+            })
             .then(data => {
                 esconderLoading();
-                if (data.success) {
+                if (data && data.success) {
                     const campistaNome = document.getElementById("campistaNomeConfidentes").innerText;
-                    abrirModalConfidentes(campistaId, campistaNome);
-                    document.getElementById("novoConfidenteId").value = "";
+                    // Desmarcar checkboxes selecionados
+                    checkboxes.forEach(cb => cb.checked = false);
+                    // Recarregar modal sem mostrar loading novamente (já está escondido)
+                    abrirModalConfidentes(campistaId, campistaNome, true);
                 } else {
-                    alert(data.message || "Erro ao adicionar confidente.");
-                    btn.disabled = false;
-                    btn.innerHTML = btnTextOriginal;
+                    alert(data?.message || "Erro ao adicionar confidente(s).");
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = btnTextOriginal;
+                    }
                 }
             })
             .catch(error => {
                 console.error("Erro:", error);
                 esconderLoading();
-                alert("Erro ao adicionar confidente.");
-                btn.disabled = false;
-                btn.innerHTML = btnTextOriginal;
+                alert("Erro ao adicionar confidente(s). Por favor, tente novamente.");
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = btnTextOriginal;
+                }
             });
     }
 
