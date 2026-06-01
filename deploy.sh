@@ -58,14 +58,14 @@ create_env_if_missing() {
     log "Criando $ENV_FILE padrão de produção..."
     cat >"$ENV_FILE" <<'EOF'
 APP_NAME="Separador de Tribos"
-APP_ENV=production
+APP_ENV=local
 APP_KEY=
-APP_DEBUG=false
+APP_DEBUG=true
 APP_TIMEZONE=America/Sao_Paulo
 APP_URL=http://localhost
 
 LOG_CHANNEL=stack
-LOG_LEVEL=error
+LOG_LEVEL=info
 
 DB_CONNECTION=sqlite
 DB_DATABASE=/var/www/html/database/database.sqlite
@@ -97,15 +97,15 @@ patch_env() {
     }
 
     set_env APP_NAME '"Separador de Tribos"'
-    set_env APP_ENV production
-    set_env APP_DEBUG false
+    set_env APP_ENV local
+    set_env APP_DEBUG true
     set_env APP_URL "$app_url"
     set_env DB_CONNECTION sqlite
     set_env DB_DATABASE /var/www/html/database/database.sqlite
     set_env SESSION_DRIVER file
     set_env CACHE_STORE file
     set_env QUEUE_CONNECTION sync
-    set_env LOG_LEVEL error
+    set_env LOG_LEVEL info
 }
 
 has_app_key() {
