@@ -3,369 +3,170 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <meta name="theme-color" content="#2E8B57"/>
+    <meta name="theme-color" content="#059669"/>
     <link rel="shortcut icon" href="./assets/img/favicon.ico"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.1.0-beta.1/css/select2.min.css" rel="stylesheet"/>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .bg-maanaim {
-            background: linear-gradient(135deg, #2E8B57 0%, #228B22 100%);
-        }
-        
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .badge-valid {
-            @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800;
-        }
-        
-        .badge-invalid {
-            @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
-        }
-        
-        .btn-primary {
-            @apply bg-[#2E8B57] hover:bg-[#228B22] text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200;
-        }
-        
-        .btn-secondary {
-            @apply bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200;
-        }
-        
-        .btn-danger {
-            @apply bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200;
-        }
-        
-        .input-modern {
-            @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2E8B57] focus:border-transparent transition-all;
-        }
-        
-        .modal-backdrop {
-            backdrop-filter: blur(4px);
-        }
-        
-        .tribo-card {
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            padding: 0;
-            border: 1px solid #e5e7eb;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .tribo-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #2E8B57 0%, #228B22 100%);
-            z-index: 1;
-        }
-        
-        .tribo-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            border-color: #2E8B57;
-        }
-        
-        .tribo-card-content {
-            padding: 1.5rem;
-        }
-        
-        .stat-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.375rem 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
-            color: #374151;
-            border: 1px solid #e5e7eb;
-            transition: all 0.2s ease;
-        }
-        
-        .stat-badge:hover {
-            background: linear-gradient(to bottom right, #f3f4f6, #e5e7eb);
-            border-color: #d1d5db;
-            transform: translateY(-1px);
-        }
-        
-        .tribo-header {
-            background: linear-gradient(to right, #2E8B57, #228B22);
-            color: white;
-            margin-bottom: 1rem;
-            padding: 1rem 1.5rem;
-            border-radius: 1rem 1rem 0 0;
-        }
-        
-        .campista-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.625rem;
-            border-radius: 0.5rem;
-            border: 1px solid;
-            transition: all 0.2s ease;
-        }
-        
-        .campista-item:hover {
-            transform: translateX(2px);
-        }
-        
-        .action-card {
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-        
-        .action-card:hover {
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-        
-        /* Animações */
-        .modal-enter {
-            animation: modalFadeIn 0.3s ease-out;
-        }
-        
-        .modal-exit {
-            animation: modalFadeOut 0.3s ease-in;
-        }
-        
-        @keyframes modalFadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-        
-        @keyframes modalFadeOut {
-            from {
-                opacity: 1;
-                transform: scale(1);
-            }
-            to {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-        }
-        
-        .list-item-enter {
-            animation: slideInLeft 0.3s ease-out;
-        }
-        
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #2E8B57;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+    <link rel="stylesheet" href="/assets/css/maanaim.css"/>
     <title>Maanaim | Separação de Tribos</title>
 </head>
-<body class="bg-gray-50 antialiased">
+<body class="antialiased">
     <!-- Navbar -->
-    <nav class="bg-maanaim shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <i class="fas fa-users text-white text-xl mr-3"></i>
-                    <h1 class="text-white text-lg font-bold">Maanaim - Separação de Tribos</h1>
+    <nav class="navbar">
+        <div class="navbar-inner">
+            <div class="navbar-brand">
+                <div class="navbar-brand-icon">
+                    <i class="fas fa-campground"></i>
                 </div>
-                <div class="flex gap-3">
-                    <button onclick="abrirModalAdicionarTribo()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Nova Tribo
-                    </button>
-                    <button onclick="abrirModalAdicionarCampista()" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors">
-                        <i class="fas fa-user-plus mr-2"></i>Novo Campista
-                    </button>
-                    <a href="/confidentes" class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-colors">
-                        <i class="fas fa-user-tie mr-2"></i>Confidentes
-                    </a>
+                <div class="navbar-brand-text">
+                    <div class="navbar-brand-title">Maanaim</div>
+                    <div class="navbar-brand-sub">Separação de Tribos</div>
                 </div>
             </div>
+            <div class="navbar-actions">
+                <button onclick="abrirModalAdicionarTribo()" class="navbar-btn">
+                    <i class="fas fa-plus"></i><span>Nova Tribo</span>
+                </button>
+                <button onclick="abrirModalAdicionarCampista()" class="navbar-btn navbar-btn-primary">
+                    <i class="fas fa-user-plus"></i><span>Novo Campista</span>
+                </button>
+                <a href="/confidentes" class="navbar-btn">
+                    <i class="fas fa-user-tie"></i><span>Confidentes</span>
+                </a>
             </div>
-        </nav>
+            <button class="navbar-mobile-toggle" onclick="toggleMobileNav()" aria-label="Menu">
+                <i class="fas fa-bars" id="mobileNavIcon"></i>
+            </button>
+        </div>
+        <div class="navbar-mobile-menu" id="mobileNavMenu">
+            <button onclick="abrirModalAdicionarTribo(); toggleMobileNav()" class="navbar-btn">
+                <i class="fas fa-plus"></i>Nova Tribo
+            </button>
+            <button onclick="abrirModalAdicionarCampista(); toggleMobileNav()" class="navbar-btn navbar-btn-primary">
+                <i class="fas fa-user-plus"></i>Novo Campista
+            </button>
+            <a href="/confidentes" class="navbar-btn">
+                <i class="fas fa-user-tie"></i>Confidentes
+            </a>
+        </div>
+    </nav>
 
     <!-- Alertas -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-                @if (session('success'))
-            <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-4">
-                <div class="flex items-center mb-2">
-                    <i class="fas fa-check-circle mr-2"></i>
+    <div class="page-container !pb-0 !pt-4">
+        @if (session('success'))
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle alert-icon"></i>
+                <div class="flex-1">
                     <span class="font-semibold">{{ session('success') }}</span>
-                </div>
-                @if (session('importacao_detalhes'))
-                    @php
-                        $detalhes = session('importacao_detalhes');
-                    @endphp
-                    <div class="mt-3 text-sm">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
-                            <div>
-                                <span class="font-medium">Total processado:</span> {{ $detalhes['total'] }}
-                                @if(isset($detalhes['total_esperado']) && $detalhes['total_esperado'] != $detalhes['total'])
-                                    <span class="text-yellow-600 text-xs">(esperado: {{ $detalhes['total_esperado'] }})</span>
-                                @endif
+                    @if (session('importacao_detalhes'))
+                        @php $detalhes = session('importacao_detalhes'); @endphp
+                        <div class="mt-3 text-sm">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+                                <div><span class="font-medium">Total processado:</span> {{ $detalhes['total'] }}</div>
+                                <div class="text-green-700"><span class="font-medium">Sucessos:</span> {{ $detalhes['sucessos'] }}</div>
+                                <div class="text-red-700"><span class="font-medium">Erros:</span> {{ $detalhes['erros'] }}</div>
                             </div>
-                            <div class="text-green-700">
-                                <span class="font-medium">Sucessos:</span> {{ $detalhes['sucessos'] }}
-                            </div>
-                            <div class="text-red-700">
-                                <span class="font-medium">Erros:</span> {{ $detalhes['erros'] }}
-                            </div>
-                            @if(isset($detalhes['linhas_vazias']) && $detalhes['linhas_vazias'] > 0)
-                                <div class="text-gray-600">
-                                    <span class="font-medium">Linhas vazias:</span> {{ $detalhes['linhas_vazias'] }}
-                                </div>
+                            @if (!empty($detalhes['erros_detalhados']))
+                                <details class="mt-2">
+                                    <summary class="cursor-pointer text-red-600 font-medium hover:text-red-800">
+                                        Ver detalhes dos erros ({{ count($detalhes['erros_detalhados']) }})
+                                    </summary>
+                                    <div class="mt-2 max-h-96 overflow-y-auto border border-red-200 rounded-lg p-3 bg-red-50">
+                                        <ul class="space-y-1.5 text-xs">
+                                            @foreach ($detalhes['erros_detalhados'] as $erro)
+                                                <li class="text-red-700">{{ $erro }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                </details>
                             @endif
                         </div>
-                        @if (!empty($detalhes['erros_detalhados']))
-                            <details class="mt-2" open>
-                                <summary class="cursor-pointer text-red-600 font-medium hover:text-red-800">
-                                    <i class="fas fa-exclamation-triangle mr-1"></i>
-                                    Ver detalhes dos erros ({{ count($detalhes['erros_detalhados']) }})
-                                </summary>
-                                <div class="mt-2 max-h-96 overflow-y-auto border border-red-200 rounded-lg p-3 bg-red-50">
-                                    <ul class="space-y-1.5 text-xs">
-                                        @foreach ($detalhes['erros_detalhados'] as $erro)
-                                            <li class="text-red-700 flex items-start">
-                                                <span class="text-red-500 mr-2">•</span>
-                                                <span class="flex-1">{{ $erro }}</span>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            </details>
-                        @endif
-                    </div>
-                @endif
-                    </div>
-                @endif
-
-                @if (session('warning'))
-            <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg mb-4">
-                <div class="flex items-center mb-2">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                    <span class="font-semibold">{{ session('warning') }}</span>
+                    @endif
                 </div>
-                @if (session('campistas_nao_alocados'))
-                    @php
-                        $naoAlocados = session('campistas_nao_alocados');
-                    @endphp
-                    <details class="mt-3">
-                        <summary class="cursor-pointer text-red-600 font-medium text-sm">Ver campistas não alocados ({{ count($naoAlocados) }})</summary>
-                        <ul class="mt-2 space-y-2 text-sm">
-                            @foreach ($naoAlocados as $campista)
-                                <li class="bg-red-50 border border-red-200 rounded p-2">
-                                    <div class="font-medium text-red-800">{{ $campista['nome'] }}</div>
-                                    <div class="text-xs text-red-600 mt-1 italic">
-                                        <i class="fas fa-info-circle mr-1"></i>{{ $campista['motivo'] }}
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </details>
-                @endif
-                    </div>
-                @endif
-
-                @if (session('error'))
-            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-4 flex items-center">
-                <i class="fas fa-times-circle mr-2"></i>
-                <span>{{ session('error') }}</span>
-                    </div>
-                @endif
             </div>
+        @endif
+
+        @if (session('warning'))
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle alert-icon"></i>
+                <div class="flex-1">
+                    <span class="font-semibold">{{ session('warning') }}</span>
+                    @if (session('campistas_nao_alocados'))
+                        @php $naoAlocados = session('campistas_nao_alocados'); @endphp
+                        <details class="mt-3">
+                            <summary class="cursor-pointer text-red-600 font-medium text-sm">Ver campistas não alocados ({{ count($naoAlocados) }})</summary>
+                            <ul class="mt-2 space-y-2 text-sm">
+                                @foreach ($naoAlocados as $campista)
+                                    <li class="bg-red-50 border border-red-200 rounded-lg p-2">
+                                        <div class="font-medium text-red-800">{{ $campista['nome'] }}</div>
+                                        <div class="text-xs text-red-600 mt-1 italic">{{ $campista['motivo'] }}</div>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </details>
+                    @endif
+                </div>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-error">
+                <i class="fas fa-times-circle alert-icon"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+    </div>
 
     <!-- Loading Overlay Global -->
-    <div id="loadingOverlay" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black bg-opacity-50 modal-backdrop">
-        <div class="bg-white rounded-xl shadow-2xl p-8 text-center modal-enter">
+    <div id="loadingOverlay" class="fixed inset-0 hidden z-50 flex items-center justify-center bg-black/40 modal-backdrop">
+        <div class="loading-card modal-enter">
             <div class="spinner mx-auto mb-4"></div>
-            <p id="loadingText" class="text-gray-700 font-medium text-lg">Processando...</p>
+            <p id="loadingText" class="text-gray-700 font-semibold">Processando...</p>
         </div>
     </div>
 
     <!-- Conteúdo Principal -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="page-container">
         <!-- Ações Principais -->
-        <div class="mb-6">
-            <h2 class="text-base font-semibold text-gray-700 mb-3 flex items-center">
-                <i class="fas fa-bolt mr-2 text-yellow-500"></i>
-                Ações Rápidas
-            </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <!-- Botão Montar Tribos -->
-                <button id="btnMontarTribos" onclick="montarTribos(event)" 
-                        class="action-card bg-gradient-to-br from-[#2E8B57] to-[#228B22] hover:from-[#228B22] hover:to-[#1e7a1e] text-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 group">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center flex-1">
-                            <div class="bg-white/20 rounded-lg p-2.5 mr-3 group-hover:bg-white/30 transition-colors">
-                                <i class="fas fa-magic text-lg"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-base font-bold mb-0.5">Montar Tribos</h3>
-                                <p class="text-xs text-white/85">Distribuição automática respeitando as regras</p>
-                            </div>
-                        </div>
-                        <div class="ml-3">
-                            <i class="fas fa-arrow-right text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all text-sm"></i>
-                        </div>
-                    </div>
-                    </button>
-
-                <!-- Botão Importar CSV -->
-                <button onclick="abrirModalImportarCSV()" 
-                        class="action-card bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 group">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center flex-1">
-                            <div class="bg-white/20 rounded-lg p-2.5 mr-3 group-hover:bg-white/30 transition-colors">
-                                <i class="fas fa-file-upload text-lg"></i>
+        <div class="mb-8">
+            <div class="section-header mb-4">
+                <div class="section-header-icon section-header-icon-yellow">
+                    <i class="fas fa-bolt"></i>
                 </div>
-                            <div class="flex-1">
-                                <h3 class="text-base font-bold mb-0.5">Importar CSV</h3>
-                                <p class="text-xs text-white/85">Importe múltiplos campistas de uma vez</p>
+                <div>
+                    <div class="section-title">Ações Rápidas</div>
+                    <div class="section-subtitle">Distribua campistas ou importe dados em lote</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="btnMontarTribos" onclick="montarTribos(event)" class="action-card action-card-green">
+                    <div class="flex items-center justify-between relative z-10">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="action-card-icon">
+                                <i class="fas fa-magic"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold mb-0.5">Montar Tribos</h3>
+                                <p class="text-xs opacity-85">Distribuição automática respeitando as regras</p>
                             </div>
                         </div>
-                        <div class="ml-3">
-                            <i class="fas fa-arrow-right text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all text-sm"></i>
+                        <i class="fas fa-arrow-right opacity-60 text-sm"></i>
+                    </div>
+                </button>
+
+                <button onclick="abrirModalImportarCSV()" class="action-card action-card-blue">
+                    <div class="flex items-center justify-between relative z-10">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="action-card-icon">
+                                <i class="fas fa-file-upload"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold mb-0.5">Importar CSV</h3>
+                                <p class="text-xs opacity-85">Importe múltiplos campistas de uma vez</p>
+                            </div>
                         </div>
+                        <i class="fas fa-arrow-right opacity-60 text-sm"></i>
                     </div>
                 </button>
             </div>
@@ -388,96 +189,112 @@
         @endphp
         
         @if($totalInvalidos > 0)
-            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <i class="fas fa-exclamation-triangle mr-2 text-xl"></i>
-                        <div>
-                            <p class="font-semibold">Atenção: {{ $totalInvalidos }} campista(s) inválido(s) detectado(s)</p>
-                            <p class="text-sm mt-1">Alguns campistas estão em tribos onde conhecem outros campistas ou confidentes.</p>
-                        </div>
+            <div class="alert alert-error mb-6">
+                <i class="fas fa-exclamation-triangle alert-icon"></i>
+                <div class="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                        <p class="font-semibold">{{ $totalInvalidos }} campista(s) inválido(s) detectado(s)</p>
+                        <p class="text-sm mt-0.5 opacity-80">Alguns campistas estão em tribos onde conhecem outros campistas ou confidentes.</p>
                     </div>
-                    <button onclick="document.getElementById('campistaTable').scrollIntoView({ behavior: 'smooth' }); document.getElementById('campistaCardsContainer')?.scrollIntoView({ behavior: 'smooth' });" 
-                            class="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors">
-                        <i class="fas fa-arrow-down mr-2"></i>Ver Campistas
+                    <button onclick="document.getElementById('campistaTable')?.scrollIntoView({ behavior: 'smooth' }); document.getElementById('campistaCardsContainer')?.scrollIntoView({ behavior: 'smooth' });" 
+                            class="btn-danger text-sm !py-2 !px-4 shrink-0">
+                        <i class="fas fa-arrow-down mr-1"></i>Ver Campistas
                     </button>
                 </div>
             </div>
         @endif
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <!-- Card 1: Total de Campistas -->
-            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 card-hover">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div class="stat-card stat-card-blue">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Total de Campistas</p>
-                        <p class="text-3xl font-bold text-gray-800">{{ $totalCampistas }}</p>
+                        <p class="stat-card-label">Total de Campistas</p>
+                        <p class="stat-card-value">{{ $totalCampistas }}</p>
                     </div>
-                    <div class="bg-blue-100 rounded-full p-4">
-                        <i class="fas fa-users text-2xl text-blue-600"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Card 2: Campistas Alocados -->
-            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 card-hover">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">Campistas Alocados</p>
-                        <p class="text-3xl font-bold text-gray-800">{{ $campistasComTribo }}</p>
-                        <p class="text-xs text-gray-500 mt-1">{{ number_format($percentualAlocado, 1) }}% do total</p>
-                    </div>
-                    <div class="bg-green-100 rounded-full p-4">
-                        <i class="fas fa-check-circle text-2xl text-green-600"></i>
+                    <div class="stat-card-icon stat-card-icon-blue">
+                        <i class="fas fa-users"></i>
                     </div>
                 </div>
             </div>
 
-            <!-- Card 3: Campistas Sem Tribo -->
-            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 {{ $campistasSemTribo > 0 ? 'border-yellow-500' : 'border-gray-300' }} card-hover">
+            <div class="stat-card stat-card-green">
                 <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-1">Sem Tribo</p>
-                        <p class="text-3xl font-bold text-gray-800">{{ $campistasSemTribo }}</p>
-                        @if($campistasSemTribo > 0)
-                            <p class="text-xs text-yellow-600 mt-1 font-medium">Requer atenção</p>
-                        @endif
+                    <div class="flex-1">
+                        <p class="stat-card-label">Campistas Alocados</p>
+                        <p class="stat-card-value">{{ $campistasComTribo }}</p>
+                        <p class="stat-card-sub">{{ number_format($percentualAlocado, 1) }}% do total</p>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill" style="width: {{ $percentualAlocado }}%"></div>
+                        </div>
                     </div>
-                    <div class="rounded-full p-4 {{ $campistasSemTribo > 0 ? 'bg-yellow-100' : 'bg-gray-100' }}">
-                        <i class="fas fa-user-slash text-2xl {{ $campistasSemTribo > 0 ? 'text-yellow-600' : 'text-gray-600' }}"></i>
+                    <div class="stat-card-icon stat-card-icon-green ml-3">
+                        <i class="fas fa-check-circle"></i>
                     </div>
                 </div>
             </div>
-            
-            <!-- Card 4: Campistas Inválidos -->
-            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 {{ $totalInvalidos > 0 ? 'border-red-500' : 'border-gray-300' }} card-hover">
+
+            <div class="stat-card stat-card-yellow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Campistas Inválidos</p>
-                        <p class="text-3xl font-bold {{ $totalInvalidos > 0 ? 'text-red-600' : 'text-gray-800' }}">{{ $totalInvalidos }}</p>
-                        @if($totalInvalidos > 0)
-                            <p class="text-xs text-red-600 mt-1 font-medium">Requer correção</p>
-                        @else
-                            <p class="text-xs text-gray-500 mt-1">Todos válidos</p>
+                        <p class="stat-card-label">Sem Tribo</p>
+                        <p class="stat-card-value">{{ $campistasSemTribo }}</p>
+                        @if($campistasSemTribo > 0)
+                            <p class="stat-card-sub text-amber-600 font-medium">Requer atenção</p>
                         @endif
                     </div>
-                    <div class="rounded-full p-4 {{ $totalInvalidos > 0 ? 'bg-red-100' : 'bg-gray-100' }}">
-                        <i class="fas fa-exclamation-triangle text-2xl {{ $totalInvalidos > 0 ? 'text-red-600' : 'text-gray-600' }}"></i>
+                    <div class="stat-card-icon stat-card-icon-yellow">
+                        <i class="fas fa-user-slash"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-card-red">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="stat-card-label">Campistas Inválidos</p>
+                        <p class="stat-card-value {{ $totalInvalidos > 0 ? 'text-red-600' : '' }}">{{ $totalInvalidos }}</p>
+                        <p class="stat-card-sub {{ $totalInvalidos > 0 ? 'text-red-600 font-medium' : '' }}">
+                            {{ $totalInvalidos > 0 ? 'Requer correção' : 'Todos válidos' }}
+                        </p>
+                    </div>
+                    <div class="stat-card-icon stat-card-icon-red">
+                        <i class="fas fa-exclamation-triangle"></i>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Card de Médias Globais (linha separada) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500 card-hover">
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="stat-card stat-card-purple">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-gray-600 mb-1">Médias Globais</p>
-                        <p class="text-lg font-bold text-gray-800">{{ number_format($pesoMedioGlobal, 1) }} kg</p>
-                        <p class="text-lg font-bold text-gray-800">{{ number_format($alturaMediaGlobal, 1) }} cm</p>
+                        <p class="stat-card-label">Média de Peso</p>
+                        <p class="stat-card-value text-2xl">{{ number_format($pesoMedioGlobal, 1) }}<span class="text-base font-semibold text-gray-500 ml-1">kg</span></p>
                     </div>
-                    <div class="bg-purple-100 rounded-full p-4">
-                        <i class="fas fa-chart-line text-2xl text-purple-600"></i>
+                    <div class="stat-card-icon stat-card-icon-purple">
+                        <i class="fas fa-weight"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card stat-card-purple">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="stat-card-label">Média de Altura</p>
+                        <p class="stat-card-value text-2xl">{{ number_format($alturaMediaGlobal, 1) }}<span class="text-base font-semibold text-gray-500 ml-1">cm</span></p>
+                    </div>
+                    <div class="stat-card-icon stat-card-icon-purple">
+                        <i class="fas fa-ruler-vertical"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card stat-card-green">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="stat-card-label">Tribos Cadastradas</p>
+                        <p class="stat-card-value">{{ $tribos->count() }}</p>
+                    </div>
+                    <div class="stat-card-icon stat-card-icon-green">
+                        <i class="fas fa-layer-group"></i>
                     </div>
                 </div>
             </div>
@@ -485,10 +302,15 @@
 
         <!-- Grid de Tribos -->
         <div class="mb-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                <i class="fas fa-layer-group mr-2 text-[#2E8B57]"></i>
-                Tribos
-            </h2>
+            <div class="section-header">
+                <div class="section-header-icon section-header-icon-green">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div>
+                    <div class="section-title">Tribos</div>
+                    <div class="section-subtitle">{{ $tribos->count() }} tribo(s) cadastrada(s)</div>
+                </div>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse($tribos as $tribo)
                                             @php
@@ -734,10 +556,11 @@
                         </div>
                     </div>
                 @empty
-                    <div class="col-span-full text-center py-12">
-                        <i class="fas fa-layer-group text-6xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-500 text-lg">Nenhuma tribo cadastrada</p>
-                        <button onclick="abrirModalAdicionarTribo()" class="btn-primary mt-4">
+                    <div class="col-span-full empty-state content-panel">
+                        <i class="fas fa-layer-group empty-state-icon"></i>
+                        <p class="empty-state-title">Nenhuma tribo cadastrada</p>
+                        <p class="empty-state-desc">Crie sua primeira tribo para começar a distribuir os campistas.</p>
+                        <button onclick="abrirModalAdicionarTribo()" class="btn-primary">
                             <i class="fas fa-plus mr-2"></i>Criar Primeira Tribo
                         </button>
                     </div>
@@ -746,25 +569,28 @@
         </div>
 
         <!-- Lista de Campistas -->
-        <div class="bg-white rounded-xl shadow-md p-6">
-            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-3">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                    <i class="fas fa-users mr-2 text-[#2E8B57]"></i>
-                    Campistas
-                </h2>
-                <div class="flex flex-col sm:flex-row gap-3">
+        <div class="content-panel">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-5 gap-4">
+                <div class="section-header !mb-0">
+                    <div class="section-header-icon section-header-icon-green">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="section-title">Campistas</div>
+                        <div class="section-subtitle">{{ $campistas->count() }} cadastrado(s)</div>
+                    </div>
+                </div>
+                <div class="filter-bar">
                     <input type="text" id="searchInput" onkeyup="filterTable()"
                            placeholder="Buscar campistas..."
-                           class="input-modern w-full sm:w-64">
-                    <button id="filterSemTribo" onclick="toggleFilterSemTribo()" 
-                            class="px-4 py-2 rounded-lg border-2 transition-colors text-sm font-medium whitespace-nowrap
-                                   border-yellow-500 bg-yellow-50 text-yellow-700 hover:bg-yellow-100">
-                        <i class="fas fa-filter mr-2"></i>
+                           class="input-modern w-full sm:w-56">
+                    <button id="filterSemTribo" onclick="toggleFilterSemTribo()" class="filter-btn">
+                        <i class="fas fa-filter"></i>
                         <span id="filterSemTriboText">Sem Tribo</span>
                     </button>
                     <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600 whitespace-nowrap">Itens por página:</label>
-                        <select id="itemsPerPage" onchange="changeItemsPerPage()" class="input-modern w-24 text-sm">
+                        <label class="text-sm text-gray-500 whitespace-nowrap">Por página:</label>
+                        <select id="itemsPerPage" onchange="changeItemsPerPage()" class="input-modern w-20 text-sm !py-2">
                             <option value="10">10</option>
                             <option value="25" selected>25</option>
                             <option value="50">50</option>
@@ -776,16 +602,16 @@
             </div>
             
             <!-- Versão Desktop (tabela) -->
-            <div class="hidden md:block overflow-x-auto">
-                <table id="campistaTable" class="w-full">
-                    <thead class="bg-gray-50">
+            <div class="hidden md:block table-container">
+                <table id="campistaTable" class="table-modern">
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ID</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nome</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Gênero</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Peso</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Altura</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Ações</th>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Gênero</th>
+                            <th>Peso</th>
+                            <th>Altura</th>
+                            <th>Ações</th>
                             </tr>
                             </thead>
                     <tbody id="campistaTableBody" class="divide-y divide-gray-200">
@@ -989,18 +815,16 @@
                     <span id="paginationInfo">Mostrando 0 de 0 campistas</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button id="prevPageBtn" onclick="changePage(-1)" 
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        <i class="fas fa-chevron-left mr-1"></i>Anterior
+                    <button id="prevPageBtn" onclick="changePage(-1)" class="pagination-btn">
+                        <i class="fas fa-chevron-left"></i>Anterior
                     </button>
                     <div class="flex items-center gap-1">
-                        <span id="currentPage" class="px-3 py-2 text-sm font-medium text-gray-700">1</span>
-                        <span class="text-gray-500">de</span>
-                        <span id="totalPages" class="px-3 py-2 text-sm font-medium text-gray-700">1</span>
+                        <span id="currentPage" class="px-3 py-2 text-sm font-semibold text-gray-700">1</span>
+                        <span class="text-gray-400 text-sm">de</span>
+                        <span id="totalPages" class="px-3 py-2 text-sm font-semibold text-gray-700">1</span>
                     </div>
-                    <button id="nextPageBtn" onclick="changePage(1)" 
-                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                        Próximo<i class="fas fa-chevron-right ml-1"></i>
+                    <button id="nextPageBtn" onclick="changePage(1)" class="pagination-btn">
+                        Próximo<i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
             </div>
@@ -1009,12 +833,12 @@
 
     <!-- Modal Adicionar/Editar Tribo -->
     <div id="modalTribo" class="fixed inset-0 hidden z-50 flex items-center justify-center modal-backdrop">
-        <div onclick="fecharModalTribo()" class="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div id="modalTriboContent" class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative z-10 mx-4 max-h-[90vh] overflow-y-auto">
-            <button onclick="fecharModalTribo()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
+        <div onclick="fecharModalTribo()" class="absolute inset-0 bg-black/40"></div>
+        <div id="modalTriboContent" class="modal-content w-full max-w-lg p-6 relative z-10 mx-4 max-h-[90vh] overflow-y-auto">
+            <button onclick="fecharModalTribo()" class="modal-close">
+                <i class="fas fa-times"></i>
                 </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4" id="modalTriboTitulo">Adicionar Tribo</h2>
+            <h2 class="modal-title" id="modalTriboTitulo">Adicionar Tribo</h2>
             <form id="formTribo" onsubmit="salvarTribo(event)">
                 <input type="hidden" id="triboId">
                 <div class="mb-4">
@@ -1073,12 +897,12 @@
 
     <!-- Modal Adicionar/Editar Campista -->
     <div id="modalAdicionarCampista" class="fixed inset-0 hidden z-50 flex items-center justify-center modal-backdrop">
-        <div onclick="fecharModalAdicionarCampista()" class="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div id="modalAdicionarCampistaContent" class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative z-10 mx-4">
-            <button onclick="fecharModalAdicionarCampista()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
+        <div onclick="fecharModalAdicionarCampista()" class="absolute inset-0 bg-black/40"></div>
+        <div id="modalAdicionarCampistaContent" class="modal-content w-full max-w-md p-6 relative z-10 mx-4">
+            <button onclick="fecharModalAdicionarCampista()" class="modal-close">
+                <i class="fas fa-times"></i>
                 </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4" id="modalCampistaTitulo">Adicionar Campista</h2>
+            <h2 class="modal-title" id="modalCampistaTitulo">Adicionar Campista</h2>
             <form id="formAdicionarCampista" onsubmit="salvarCampista(event)">
                 <input type="hidden" id="campistaId" value="">
                 <div class="mb-4">
@@ -1117,12 +941,12 @@
 
     <!-- Modal Conhecidos -->
     <div id="modalConhecidos" class="fixed inset-0 hidden z-50 flex items-center justify-center modal-backdrop">
-        <div onclick="fecharModal()" class="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div id="modalConhecidosContent" class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative z-10 mx-4">
-            <button onclick="fecharModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
+        <div onclick="fecharModal()" class="absolute inset-0 bg-black/40"></div>
+        <div id="modalConhecidosContent" class="modal-content w-full max-w-lg p-6 relative z-10 mx-4">
+            <button onclick="fecharModal()" class="modal-close">
+                <i class="fas fa-times"></i>
                 </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Conhecidos de <span id="campistaNome"></span></h2>
+            <h2 class="modal-title">Conhecidos de <span id="campistaNome"></span></h2>
             <div class="overflow-y-auto max-h-60 mb-4">
                 <ul id="listaConhecidos" class="space-y-2">
                     <!-- Itens serão inseridos aqui -->
@@ -1154,12 +978,12 @@
 
     <!-- Modal Confidentes -->
     <div id="modalConfidentes" class="fixed inset-0 hidden z-50 flex items-center justify-center modal-backdrop">
-        <div onclick="fecharModalConfidentes()" class="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div id="modalConfidentesContent" class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative z-10 mx-4">
-            <button onclick="fecharModalConfidentes()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
+        <div onclick="fecharModalConfidentes()" class="absolute inset-0 bg-black/40"></div>
+        <div id="modalConfidentesContent" class="modal-content w-full max-w-lg p-6 relative z-10 mx-4">
+            <button onclick="fecharModalConfidentes()" class="modal-close">
+                <i class="fas fa-times"></i>
                 </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Confidentes Conhecidos de <span id="campistaNomeConfidentes"></span></h2>
+            <h2 class="modal-title">Confidentes de <span id="campistaNomeConfidentes"></span></h2>
             <div class="overflow-y-auto max-h-60 mb-4">
                 <ul id="listaConfidentes" class="space-y-2">
                     <!-- Itens serão inseridos aqui -->
@@ -1186,12 +1010,12 @@
 
     <!-- Modal Importar CSV -->
     <div id="modalImportarCSV" class="fixed inset-0 hidden z-50 flex items-center justify-center modal-backdrop">
-        <div onclick="fecharModalImportarCSV()" class="absolute inset-0 bg-black bg-opacity-50"></div>
-        <div id="modalImportarCSVContent" class="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative z-10 mx-4">
-            <button onclick="fecharModalImportarCSV()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
+        <div onclick="fecharModalImportarCSV()" class="absolute inset-0 bg-black/40"></div>
+        <div id="modalImportarCSVContent" class="modal-content w-full max-w-lg p-6 relative z-10 mx-4">
+            <button onclick="fecharModalImportarCSV()" class="modal-close">
+                <i class="fas fa-times"></i>
             </button>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">
+            <h2 class="modal-title">
                 <i class="fas fa-file-csv mr-2 text-blue-600"></i>Importar Campistas via CSV
             </h2>
             
@@ -1769,12 +1593,21 @@
             
             if (btn && text) {
                 if (filterSemTribo) {
-                    btn.className = 'px-4 py-2 rounded-lg border-2 transition-colors text-sm font-medium whitespace-nowrap border-yellow-600 bg-yellow-500 text-white hover:bg-yellow-600';
+                    btn.classList.add('active');
                     text.textContent = 'Sem Tribo ✓';
                 } else {
-                    btn.className = 'px-4 py-2 rounded-lg border-2 transition-colors text-sm font-medium whitespace-nowrap border-yellow-500 bg-yellow-50 text-yellow-700 hover:bg-yellow-100';
+                    btn.classList.remove('active');
                     text.textContent = 'Sem Tribo';
                 }
+            }
+        }
+
+        function toggleMobileNav() {
+            const menu = document.getElementById('mobileNavMenu');
+            const icon = document.getElementById('mobileNavIcon');
+            if (menu && icon) {
+                const isOpen = menu.classList.toggle('open');
+                icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
             }
         }
 
