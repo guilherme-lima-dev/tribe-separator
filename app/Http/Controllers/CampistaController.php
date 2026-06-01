@@ -441,6 +441,27 @@ class CampistaController extends Controller
         return response()->json(['success' => false, 'message' => 'Campista não encontrado']);
     }
 
+    public function downloadModeloCSV()
+    {
+        $linhas = [
+            ['Nome completo', 'Sexo', 'Peso (kg)', 'Altura (cm)'],
+            ['João Silva', 'Masculino', '75.5', '178'],
+            ['Maria Santos', 'Feminino', '62.0', '165'],
+        ];
+
+        return response()->stream(function () use ($linhas) {
+            $handle = fopen('php://output', 'w');
+            fprintf($handle, "\xEF\xBB\xBF");
+            foreach ($linhas as $linha) {
+                fputcsv($handle, $linha, ',');
+            }
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="modelo-importacao-campistas.csv"',
+        ]);
+    }
+
     public function importarCSV(Request $request)
     {
         $request->validate([
@@ -449,94 +470,55 @@ class CampistaController extends Controller
 
         $arquivo = $request->file('arquivo_csv');
         $caminho = $arquivo->getRealPath();
-        
-        $dados = [];
+
         $sucessos = 0;
         $erros = 0;
         $linhasProcessadas = 0;
         $errosDetalhados = [];
+        $numeroLinha = 0;
 
-        // Ler o arquivo CSV
-        // Tentar detectar o encoding e converter para UTF-8
         $conteudo = file_get_contents($caminho);
         $encoding = mb_detect_encoding($conteudo, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
         if ($encoding && $encoding !== 'UTF-8') {
             $conteudo = mb_convert_encoding($conteudo, 'UTF-8', $encoding);
             file_put_contents($caminho, $conteudo);
         }
-        
+
         if (($handle = fopen($caminho, 'r')) !== false) {
-            // Pular o cabeçalho (primeira linha)
             $cabecalho = fgetcsv($handle, 0, ',');
-            $numeroLinha = 1; // Começar em 1 porque já pulamos o cabeçalho
-            
+            $numeroLinha = 1;
+            $mapaColunas = $this->resolverMapaColunasCSV($cabecalho ?: []);
+
             while (($linha = fgetcsv($handle, 0, ',')) !== false) {
                 $numeroLinha++;
                 $linhasProcessadas++;
-                $nomeCampista = null;
-                
-                // Verificar se a linha está vazia
-                if (empty(array_filter($linha, function($campo) { return trim($campo) !== ''; }))) {
+
+                if (empty(array_filter($linha, fn ($campo) => trim($campo) !== ''))) {
                     $errosDetalhados[] = "Linha {$numeroLinha} - Linha vazia ignorada";
                     continue;
                 }
-                
+
                 try {
-                    // Mapear colunas do CSV
-                    // Coluna 1 (índice 1): Nome completo
-                    // Coluna 5 (índice 4): Sexo
-                    // Coluna 10 (índice 9): Peso
-                    // Coluna 11 (índice 10): Altura
-                    
-                    $numColunas = count($linha);
-                    if ($numColunas < 11) {
-                        $erros++;
-                        $nomeCampista = !empty($linha[1]) ? trim($linha[1]) : 'Nome não disponível';
-                        $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro: Dados insuficientes na linha (apenas {$numColunas} colunas encontradas, esperado 11+)";
-                        continue;
-                    }
-
-                    $nome = trim($linha[1] ?? '');
+                    $dados = $this->extrairDadosLinhaCSV($linha, $mapaColunas);
+                    $nome = $dados['nome'];
                     $nomeCampista = $nome ?: 'Nome não disponível';
-                    $sexo = trim($linha[4] ?? '');
-                    $peso = trim($linha[9] ?? '');
-                    $altura = trim($linha[10] ?? '');
+                    $sexo = $dados['sexo'];
+                    $peso = $dados['peso'];
+                    $altura = $dados['altura'];
 
-                    // Validar nome
                     if (empty($nome)) {
                         $erros++;
-                        $errosDetalhados[] = "Linha {$linhasProcessadas} - Campista: '{$nomeCampista}' - Erro: Nome vazio";
+                        $errosDetalhados[] = "Linha {$numeroLinha} - Erro: Nome vazio";
                         continue;
                     }
 
-                    // Converter sexo - normalizar e verificar variações
-                    $genero = null;
-                    // Normalizar: remover espaços, converter para minúsculas, remover acentos
-                    $sexoLimpo = mb_strtolower(trim($sexo), 'UTF-8');
-                    $sexoLimpo = preg_replace('/\s+/', '', $sexoLimpo); // Remove todos os espaços
-                    
-                    // Verificar masculino (várias variações possíveis)
-                    if (strpos($sexoLimpo, 'masculino') !== false || 
-                        $sexoLimpo === 'm' || 
-                        $sexoLimpo === 'mas' ||
-                        $sexoLimpo === 'masculino') {
-                        $genero = 'm';
-                    } 
-                    // Verificar feminino (várias variações possíveis)
-                    elseif (strpos($sexoLimpo, 'feminino') !== false || 
-                            $sexoLimpo === 'f' || 
-                            $sexoLimpo === 'fem' ||
-                            $sexoLimpo === 'feminino') {
-                        $genero = 'f';
-                    }
-
+                    $genero = $this->converterSexoParaGenero($sexo);
                     if (!$genero) {
                         $erros++;
-                        $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro: Sexo inválido ('{$sexo}') - valor normalizado: '{$sexoLimpo}'";
+                        $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro: Sexo inválido ('{$sexo}')";
                         continue;
                     }
 
-                    // Processar peso
                     $pesoLimpo = $this->limparNumero($peso);
                     if ($pesoLimpo === null || $pesoLimpo <= 0) {
                         $erros++;
@@ -544,7 +526,6 @@ class CampistaController extends Controller
                         continue;
                     }
 
-                    // Processar altura
                     $alturaLimpa = $this->limparAltura($altura);
                     if ($alturaLimpa === null || $alturaLimpa <= 0) {
                         $erros++;
@@ -552,39 +533,35 @@ class CampistaController extends Controller
                         continue;
                     }
 
-                    // Verificar se campista já existe (por nome)
                     $campistaExistente = Campista::where('nome', $nome)->first();
                     if ($campistaExistente) {
-                        // Atualizar campista existente
                         try {
-                        $campistaExistente->genero = $genero;
-                        $campistaExistente->peso = $pesoLimpo;
-                        $campistaExistente->altura = $alturaLimpa;
-                        $campistaExistente->save();
-                        $sucessos++;
+                            $campistaExistente->genero = $genero;
+                            $campistaExistente->peso = $pesoLimpo;
+                            $campistaExistente->altura = $alturaLimpa;
+                            $campistaExistente->save();
+                            $sucessos++;
                         } catch (\Exception $e) {
                             $erros++;
                             $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro ao atualizar: " . $e->getMessage();
                         }
                     } else {
-                        // Criar novo campista
                         try {
-                        Campista::create([
-                            'nome' => $nome,
-                            'genero' => $genero,
-                            'peso' => $pesoLimpo,
-                            'altura' => $alturaLimpa
-                        ]);
-                        $sucessos++;
+                            Campista::create([
+                                'nome' => $nome,
+                                'genero' => $genero,
+                                'peso' => $pesoLimpo,
+                                'altura' => $alturaLimpa,
+                            ]);
+                            $sucessos++;
                         } catch (\Exception $e) {
                             $erros++;
                             $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeCampista}' - Erro ao criar: " . $e->getMessage();
                         }
                     }
-
                 } catch (\Exception $e) {
                     $erros++;
-                    $nomeErro = $nomeCampista ?? (!empty($linha[1]) ? trim($linha[1]) : 'Nome não disponível');
+                    $nomeErro = !empty($linha[$mapaColunas['nome'] ?? 0]) ? trim($linha[$mapaColunas['nome']]) : 'Nome não disponível';
                     $errosDetalhados[] = "Linha {$numeroLinha} - Campista: '{$nomeErro}' - Erro inesperado: " . $e->getMessage();
                 }
             }
@@ -619,6 +596,92 @@ class CampistaController extends Controller
                 'erros_detalhados' => $errosDetalhados // Mostrar todos os erros
             ]
         ]);
+    }
+
+    private function resolverMapaColunasCSV(array $cabecalho): array
+    {
+        $mapaPorCabecalho = $this->mapearColunasPorCabecalho($cabecalho);
+        if ($mapaPorCabecalho !== null) {
+            return $mapaPorCabecalho;
+        }
+
+        if (count($cabecalho) >= 11) {
+            return ['nome' => 1, 'sexo' => 4, 'peso' => 9, 'altura' => 10];
+        }
+
+        return ['nome' => 0, 'sexo' => 1, 'peso' => 2, 'altura' => 3];
+    }
+
+    private function mapearColunasPorCabecalho(array $cabecalho): ?array
+    {
+        $mapa = [];
+
+        foreach ($cabecalho as $indice => $coluna) {
+            $normalizado = $this->normalizarCabecalhoCSV($coluna);
+
+            if (in_array($normalizado, ['nomecompleto', 'nome', 'name'], true)) {
+                $mapa['nome'] = $indice;
+            } elseif (in_array($normalizado, ['sexo', 'genero', 'gender'], true)) {
+                $mapa['sexo'] = $indice;
+            } elseif (str_contains($normalizado, 'peso') || $normalizado === 'weight') {
+                $mapa['peso'] = $indice;
+            } elseif (str_contains($normalizado, 'altura') || $normalizado === 'height') {
+                $mapa['altura'] = $indice;
+            }
+        }
+
+        if (isset($mapa['nome'], $mapa['sexo'], $mapa['peso'], $mapa['altura'])) {
+            return $mapa;
+        }
+
+        return null;
+    }
+
+    private function normalizarCabecalhoCSV(string $coluna): string
+    {
+        $coluna = mb_strtolower(trim($coluna), 'UTF-8');
+        $coluna = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $coluna) ?: $coluna;
+
+        return preg_replace('/[^a-z]/', '', $coluna);
+    }
+
+    private function extrairDadosLinhaCSV(array $linha, array $mapaColunas): array
+    {
+        $indiceMaximo = max($mapaColunas);
+        if (count($linha) <= $indiceMaximo) {
+            throw new \InvalidArgumentException(
+                'Dados insuficientes na linha (apenas ' . count($linha) . ' colunas encontradas)'
+            );
+        }
+
+        return [
+            'nome' => trim($linha[$mapaColunas['nome']] ?? ''),
+            'sexo' => trim($linha[$mapaColunas['sexo']] ?? ''),
+            'peso' => trim($linha[$mapaColunas['peso']] ?? ''),
+            'altura' => trim($linha[$mapaColunas['altura']] ?? ''),
+        ];
+    }
+
+    private function converterSexoParaGenero(string $sexo): ?string
+    {
+        $sexoLimpo = mb_strtolower(trim($sexo), 'UTF-8');
+        $sexoLimpo = preg_replace('/\s+/', '', $sexoLimpo);
+
+        if (
+            str_contains($sexoLimpo, 'masculino') ||
+            in_array($sexoLimpo, ['m', 'mas'], true)
+        ) {
+            return 'm';
+        }
+
+        if (
+            str_contains($sexoLimpo, 'feminino') ||
+            in_array($sexoLimpo, ['f', 'fem'], true)
+        ) {
+            return 'f';
+        }
+
+        return null;
     }
 
     /**

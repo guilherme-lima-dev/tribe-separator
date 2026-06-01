@@ -1019,11 +1019,28 @@
                 <i class="fas fa-file-csv mr-2 text-blue-600"></i>Importar Campistas via CSV
             </h2>
             
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded">
-                <p class="text-sm text-blue-700">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    <strong>Formato esperado:</strong> O arquivo CSV deve conter as colunas: Nome completo, Sexo, Peso e Altura.
-                </p>
+            <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold text-blue-900">Modelo de planilha</p>
+                        <p class="text-xs text-blue-700 mt-1">
+                            Baixe o arquivo com as colunas corretas e exemplos de preenchimento.
+                        </p>
+                    </div>
+                    <a href="/campistas/modelo-csv" download class="btn-primary !bg-blue-600 shrink-0 text-sm">
+                        <i class="fas fa-download"></i>Baixar modelo CSV
+                    </a>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 mb-4 text-sm text-gray-600">
+                <p class="font-semibold text-gray-800 mb-2">Colunas do arquivo</p>
+                <ul class="space-y-1 text-xs">
+                    <li><strong>Nome completo</strong> — nome do campista</li>
+                    <li><strong>Sexo</strong> — Masculino, Feminino, M ou F</li>
+                    <li><strong>Peso (kg)</strong> — ex: 75.5</li>
+                    <li><strong>Altura (cm)</strong> — ex: 178</li>
+                </ul>
             </div>
 
             <form id="formImportarCSV" action="/campistas/importar-csv" method="POST" enctype="multipart/form-data" onsubmit="importarCSV(event)">

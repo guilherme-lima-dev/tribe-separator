@@ -19,6 +19,7 @@ Route::get('/confidentes-api', [ConfidenteController::class, 'apiIndex']);
 Route::post('/campistas/adicionar', [CampistaController::class, 'adicionarCampista']);
 Route::put('/campistas/editar/{id}', [CampistaController::class, 'atualizarCampista']);
 Route::delete('/campistas/remover/{id}', [CampistaController::class, 'removerCampista']);
+Route::get('/campistas/modelo-csv', [CampistaController::class, 'downloadModeloCSV']);
 Route::post('/campistas/importar-csv', [CampistaController::class, 'importarCSV']);
 
 // Rotas de Tribos
