@@ -128,6 +128,14 @@ stop_host_nginx_if_needed() {
     fi
 }
 
+cleanup_old_deployment() {
+    local compose="$1"
+
+    log "Encerrando deploy anterior (se existir)..."
+    $compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+    docker rm -f tribe-separator 2>/dev/null || true
+}
+
 generate_app_key() {
     local compose="$1"
     local key
@@ -206,6 +214,7 @@ main() {
     ensure_sqlite
     stop_host_nginx_if_needed
     generate_app_key "$compose"
+    cleanup_old_deployment "$compose"
 
     log "Build e subida do container (modo daemon)..."
     $compose -f "$COMPOSE_FILE" up -d --build --remove-orphans
